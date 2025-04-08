@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingHorizontal: 20,
     backgroundColor: '#fff',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   botonRegresar: {
     alignSelf: 'flex-start',
@@ -54,5 +54,5 @@ const styles = StyleSheet.create({
     color: '#999',
     textAlign: 'center',
     paddingHorizontal: 10,
-  }
+  },
 });

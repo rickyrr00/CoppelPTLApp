@@ -7,16 +7,45 @@ import {
   StyleSheet,
   ScrollView
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const PantallaRegistro = ({ navigation }: any) => {
   const [nombre, setNombre] = useState('');
   const [correo, setCorreo] = useState('');
   const [contraseña, setContraseña] = useState('');
   const [confirmar, setConfirmar] = useState('');
+  const [errores, setErrores] = useState({
+    nombre: '',
+    correo: '',
+    contraseña: '',
+    confirmar: '',
+  });
 
-  const manejarRegistro = () => {
-    console.log({ nombre, correo, contraseña, confirmar });
-    navigation.navigate('Login');
+  const validarCorreo = (email: string) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
+  const manejarRegistro = async () => {
+    const nuevosErrores = {
+      nombre: nombre ? '' : 'El nombre es obligatorio',
+      correo: validarCorreo(correo) ? '' : 'Correo no válido',
+      contraseña: contraseña ? '' : 'La contraseña es obligatoria',
+      confirmar: confirmar === contraseña ? '' : 'Las contraseñas no coinciden',
+    };
+
+    setErrores(nuevosErrores);
+    const hayErrores = Object.values(nuevosErrores).some(error => error !== '');
+
+    if (!hayErrores) {
+      const nuevoUsuario = { nombre, correo, contraseña };
+      try {
+        await AsyncStorage.setItem('usuarioRegistrado', JSON.stringify(nuevoUsuario));
+        navigation.navigate('Login');
+      } catch (error) {
+        console.error('Error guardando usuario:', error);
+      }
+    }
   };
 
   return (
@@ -30,6 +59,8 @@ const PantallaRegistro = ({ navigation }: any) => {
         onChangeText={setNombre}
         placeholderTextColor="#aaa"
       />
+      {errores.nombre ? <Text style={styles.error}>{errores.nombre}</Text> : null}
+
       <TextInput
         style={styles.input}
         placeholder="Correo electrónico"
@@ -39,6 +70,8 @@ const PantallaRegistro = ({ navigation }: any) => {
         autoCapitalize="none"
         placeholderTextColor="#aaa"
       />
+      {errores.correo ? <Text style={styles.error}>{errores.correo}</Text> : null}
+
       <TextInput
         style={styles.input}
         placeholder="Contraseña"
@@ -47,6 +80,8 @@ const PantallaRegistro = ({ navigation }: any) => {
         secureTextEntry
         placeholderTextColor="#aaa"
       />
+      {errores.contraseña ? <Text style={styles.error}>{errores.contraseña}</Text> : null}
+
       <TextInput
         style={styles.input}
         placeholder="Confirmar contraseña"
@@ -55,6 +90,7 @@ const PantallaRegistro = ({ navigation }: any) => {
         secureTextEntry
         placeholderTextColor="#aaa"
       />
+      {errores.confirmar ? <Text style={styles.error}>{errores.confirmar}</Text> : null}
 
       <TouchableOpacity style={styles.boton} onPress={manejarRegistro}>
         <Text style={styles.textoBoton}>Registrarme</Text>
@@ -92,14 +128,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9f9f9',
     borderRadius: 8,
     paddingHorizontal: 15,
-    marginBottom: 20,
+    marginBottom: 10,
     fontSize: 16
+  },
+  error: {
+    color: 'red',
+    marginBottom: 10,
+    marginLeft: 5,
+    fontSize: 13
   },
   boton: {
     backgroundColor: '#0071ce',
     padding: 15,
     borderRadius: 8,
-    alignItems: 'center'
+    alignItems: 'center',
+    marginTop: 10
   },
   textoBoton: {
     color: '#fff',

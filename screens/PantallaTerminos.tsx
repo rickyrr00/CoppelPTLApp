@@ -17,7 +17,7 @@ const PantallaTerminos = ({ navigation }: any) => {
       <Text style={styles.titulo}>Términos y Condiciones</Text>
 
       <Text style={styles.texto}>
-        Aquí van los términos y condiciones de uso del sistema. Puedes modificar este texto con los reales.{"\n\n"}
+        Aquí van los términos y condiciones de uso del sistema.{"\n\n"}
         1. Uso responsable de la aplicación.{"\n"}
         2. Protección de datos personales.{"\n"}
         3. No compartir contraseñas.{"\n"}
