@@ -1,0 +1,18 @@
+# 1. Verifica que estás en tu rama
+git branch
+# (Debe marcar con * la rama Coppel_PTL_App)
+
+# 2. Agrega los cambios nuevos
+git add .
+
+# 3. Haz un commit con un mensaje claro
+git commit -m "Tu mensaje explicando los cambios"
+
+# 4. Sube los cambios a GitHub
+git push
+
+
+
+#make build
+
+npx eas build --platform android --profile preview

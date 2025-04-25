@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message'; // ← nuevo
 
 import PantallaLogin from './screens/PantallaLogin';
 import PantallaRegistro from './screens/PantallaRegistro';
@@ -39,16 +40,18 @@ const Tabs = () => {
   );
 };
 
-
 export default function App() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Login" component={PantallaLogin} />
-        <Stack.Screen name="Registro" component={PantallaRegistro} />
-        <Stack.Screen name="Terminos" component={PantallaTerminos} />
-        <Stack.Screen name="Tabs" component={Tabs} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <>
+      <NavigationContainer>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Login" component={PantallaLogin} />
+          <Stack.Screen name="Registro" component={PantallaRegistro} />
+          <Stack.Screen name="Terminos" component={PantallaTerminos} />
+          <Stack.Screen name="Tabs" component={Tabs} />
+        </Stack.Navigator>
+      </NavigationContainer>
+      <Toast /> {/* ← esto permite mostrar los mensajes visuales */}
+    </>
   );
 }

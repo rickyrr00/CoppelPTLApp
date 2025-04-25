@@ -3,89 +3,88 @@ import {
   View,
   Text,
   TextInput,
+  StyleSheet,
   TouchableOpacity,
-  StyleSheet
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 
-const PantallaLogin = ({ navigation }: any) => {
-  const [correo, setCorreo] = useState('');
-  const [contraseña, setContraseña] = useState('');
-  const [errores, setErrores] = useState({ correo: '', contraseña: '', general: '' });
+const PantallaLogin = () => {
+  const navigation = useNavigation<any>();
+  const [identificador, setIdentificador] = useState('');
+  const [contrasena, setContrasena] = useState('');
+  const [errores, setErrores] = useState({ identificador: '', contrasena: '' });
 
-  const validarCorreo = (email: string) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
-  };
+  const validarCorreo = (correo: string) => /\S+@\S+\.\S+/.test(correo);
 
-  const manejarLogin = async () => {
-    const nuevosErrores = {
-      correo: validarCorreo(correo) ? '' : 'Correo inválido',
-      contraseña: contraseña ? '' : 'La contraseña es obligatoria',
-      general: ''
-    };
+  const handleLogin = async () => {
+    let erroresTemp = { identificador: '', contrasena: '' };
 
-    setErrores(nuevosErrores);
+    if (!identificador.trim()) erroresTemp.identificador = 'Ingresa tu correo o usuario';
+    if (!contrasena.trim()) erroresTemp.contrasena = 'Ingresa tu contraseña';
 
-    const hayErrores = Object.values(nuevosErrores).some(error => error !== '');
-    if (hayErrores) return;
+    setErrores(erroresTemp);
+    if (erroresTemp.identificador || erroresTemp.contrasena) return;
 
-    try {
-      const datosGuardados = await AsyncStorage.getItem('usuarioRegistrado');
-      if (!datosGuardados) {
-        setErrores({ ...nuevosErrores, general: 'No hay usuarios registrados' });
-        return;
-      }
+    // Intenta buscar por correo o por username
+    const id = identificador.toLowerCase();
+    const usuarioJSON = await AsyncStorage.getItem(`usuario_${id}`);
 
-      const usuario = JSON.parse(datosGuardados);
-      if (usuario.correo === correo && usuario.contraseña === contraseña) {
-        navigation.navigate('Tabs');
-      } else {
-        setErrores({ ...nuevosErrores, general: 'Correo o contraseña incorrectos' });
-      }
-    } catch (error) {
-      console.error('Error leyendo usuario:', error);
+    if (!usuarioJSON) {
+      Alert.alert('Usuario no encontrado');
+      return;
     }
+
+    const usuario = JSON.parse(usuarioJSON);
+
+    if (usuario.contrasena !== contrasena) {
+      Alert.alert('Contraseña incorrecta');
+      return;
+    }
+
+    await AsyncStorage.setItem('usuarioLogueado', JSON.stringify(usuario));
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Tabs' }],
+    });
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.titulo}>Entra a tu cuenta</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="ej: jon.smith@email.com"
-        value={correo}
-        onChangeText={setCorreo}
-        placeholderTextColor="#aaa"
-        autoCapitalize="none"
-      />
-      {errores.correo ? <Text style={styles.error}>{errores.correo}</Text> : null}
-
-      <TextInput
-        style={styles.input}
-        placeholder="********"
-        value={contraseña}
-        onChangeText={setContraseña}
-        secureTextEntry
-        placeholderTextColor="#aaa"
-      />
-      {errores.contraseña ? <Text style={styles.error}>{errores.contraseña}</Text> : null}
-
-      {errores.general ? <Text style={styles.error}>{errores.general}</Text> : null}
-
-      <TouchableOpacity style={styles.boton} onPress={manejarLogin}>
-        <Text style={styles.textoBoton}>Entrar</Text>
-      </TouchableOpacity>
-
-      <View style={styles.footer}>
-        <Text style={styles.textoFooter}>¿No tienes cuenta?</Text>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <View style={styles.container}>
+        <Text style={styles.titulo}>Iniciar sesión</Text>
+  
+        <TextInput
+          style={styles.input}
+          placeholder="Correo o nombre de usuario"
+          autoCapitalize="none"
+          value={identificador}
+          onChangeText={setIdentificador}
+        />
+        {errores.identificador ? <Text style={styles.error}>{errores.identificador}</Text> : null}
+  
+        <TextInput
+          style={styles.input}
+          placeholder="Contraseña"
+          secureTextEntry
+          value={contrasena}
+          onChangeText={setContrasena}
+        />
+        {errores.contrasena ? <Text style={styles.error}>{errores.contrasena}</Text> : null}
+  
+        <TouchableOpacity style={styles.boton} onPress={handleLogin}>
+          <Text style={styles.botonTexto}>Ingresar</Text>
+        </TouchableOpacity>
+  
         <TouchableOpacity onPress={() => navigation.navigate('Registro')}>
-          <Text style={styles.linkFooter}>REGÍSTRATE</Text>
+          <Text style={styles.link}>¿No tienes cuenta? Regístrate</Text>
         </TouchableOpacity>
       </View>
-    </View>
-  );
+    </KeyboardAvoidingView>
+  );  
 };
 
 export default PantallaLogin;
@@ -93,54 +92,50 @@ export default PantallaLogin;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 30,
-    justifyContent: 'center',
-    backgroundColor: '#fff'
+    justifyContent: 'center', // centrado vertical
+    alignItems: 'center',     // centrado horizontal
+    padding: 20,
+    backgroundColor: '#fff',
   },
   titulo: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 30,
-    textAlign: 'center'
+    marginBottom: 20,
+    textAlign: 'center',
   },
   input: {
-    height: 50,
+    width: '100%',
+    maxWidth: 400,
     borderWidth: 1,
-    borderColor: '#eee',
-    backgroundColor: '#f9f9f9',
+    borderColor: '#aaa',
     borderRadius: 8,
-    paddingHorizontal: 15,
+    padding: 12,
     marginBottom: 10,
-    fontSize: 16
-  },
-  error: {
-    color: 'red',
-    marginBottom: 10,
-    marginLeft: 5,
-    fontSize: 13
+    fontSize: 16,
   },
   boton: {
     backgroundColor: '#0071ce',
     padding: 15,
     borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 10
+    width: '100%',
+    maxWidth: 400,
+    marginTop: 10,
   },
-  textoBoton: {
+  botonTexto: {
     color: '#fff',
-    fontWeight: 'bold'
+    textAlign: 'center',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
-  footer: {
-    marginTop: 20,
-    flexDirection: 'row',
-    justifyContent: 'center'
+  error: {
+    color: 'red',
+    fontSize: 13,
+    marginBottom: 5,
   },
-  textoFooter: {
-    color: '#999',
-    marginRight: 5
-  },
-  linkFooter: {
+  link: {
     color: '#0071ce',
-    fontWeight: 'bold'
-  }
+    textAlign: 'center',
+    marginTop: 15,
+    textDecorationLine: 'underline',
+  },
 });
