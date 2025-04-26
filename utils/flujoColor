@@ -1,0 +1,29 @@
+[Inicio de Sesión]
+        ↓
+[¿Usuario tiene color asignado?] -- NO --> [Debe ir a Asignar Color]
+        ↓ SI
+[Navega a PantallaInicio]
+        ↓
+[Puede Escanear Productos]
+
+[Asignar Color]
+        ↓
+[Selecciona un color disponible]
+        ↓
+[Marca color como ocupado]
+        ↓
+[Vuelve a Inicio]
+
+[Escaneo de Producto]
+        ↓
+[¿Color asignado?] -- NO --> [Error: Asignar color primero]
+        ↓ SI
+[Permitir búsqueda y escaneo de SKU]
+
+[Perfil del Usuario]
+        ↓
+[Presiona "Cerrar Sesión"]
+        ↓
+[Color Liberado + Sesión Borrada]
+        ↓
+[Regresa a Login]

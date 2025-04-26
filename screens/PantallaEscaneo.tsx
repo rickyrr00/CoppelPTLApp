@@ -9,8 +9,9 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
+import { useNavigation } from '@react-navigation/native';
 import { useNetInfo } from '../hooks/useNetInfo';
-import { obtenerItems, registrarEscaneo } from '../services/api';
+import { getColorAsignado } from '../utils/colores'; // ✅ Importar bien
 
 const PantallaEscaneo = ({ navigation }: any) => {
   const [skuInput, setSkuInput] = useState('');
@@ -20,52 +21,33 @@ const PantallaEscaneo = ({ navigation }: any) => {
   const isConnected = useNetInfo();
 
   const buscarProducto = async () => {
+    if (!getColorAsignado()) { // ✅ Validar que haya color asignado
+      Toast.show({
+        type: 'error',
+        text1: 'Color no asignado',
+        text2: 'Debes asignarte un color antes de escanear.',
+        position: 'bottom',
+      });
+      return;
+    }
+
     if (!skuInput.trim()) return;
 
     Keyboard.dismiss();
     setCargando(true);
     setProducto(null);
 
-    Toast.show({
-      type: 'info',
-      text1: 'Buscando producto...',
-      position: 'bottom',
-    });
-
-    try {
-      const items = await obtenerItems();
-      const encontrado = items.find((item: any) => item.itemid === skuInput.trim());
-
-      if (encontrado) {
-        setProducto(encontrado);
-
-        const resultado = await registrarEscaneo(
-          encontrado.itemid,
-          encontrado.orderid || 'ORD-DEFAULT',
-          'operador-01',
-          'cubby-01'
-        );
-
-        console.log('✔️ Escaneo registrado:', resultado);
-        Toast.show({
-          type: 'success',
-          text1: 'Producto escaneado y registrado',
-          position: 'bottom',
-        });
-      } else {
-        setProducto(null);
-      }
-    } catch (error) {
-      console.log('❌ Error al buscar producto:', error);
-      setProducto(null);
-      Toast.show({
-        type: 'error',
-        text1: 'Error al buscar o registrar',
-        position: 'bottom',
+    // Aquí iría tu lógica real de búsqueda (mock por ahora)
+    setTimeout(() => {
+      setProducto({
+        sku: skuInput,
+        coordenada: 'Módulo A1 - Estante 3',
+        articulo: 'Playera Deportiva',
+        orden: 'ORD-12345',
+        detalle: 'Playera talla M color azul',
       });
-    }
-
-    setCargando(false);
+      setCargando(false);
+    }, 1500);
   };
 
   const limpiar = () => {
@@ -76,34 +58,25 @@ const PantallaEscaneo = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.botonRegresar} onPress={() => navigation.goBack()}>
-        <Text style={styles.textoRegresar}>← Regresar</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.titulo}>Escaneo de producto</Text>
+      <Text style={styles.titulo}>Escaneo de Producto</Text>
 
       {!isConnected && (
         <View style={styles.bannerOffline}>
-          <Text style={styles.textoOffline}>Estás sin conexión a internet</Text>
+          <Text style={styles.textoOffline}>Estás sin conexión</Text>
         </View>
       )}
 
-      <Text style={styles.textoGuia}>
-        Escanea un producto o escribe el SKU manualmente
-      </Text>
+      <TextInput
+        ref={inputRef}
+        style={styles.inputVisible}
+        placeholder="Escribe el SKU"
+        onChangeText={setSkuInput}
+        value={skuInput}
+      />
 
-      <View style={styles.inputGroup}>
-        <TextInput
-          ref={inputRef}
-          style={styles.inputVisible}
-          placeholder="Escribe el SKU"
-          onChangeText={setSkuInput}
-          value={skuInput}
-        />
-        <TouchableOpacity style={styles.botonBuscar} onPress={buscarProducto}>
-          <Text style={styles.textoBuscar}>Buscar</Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity style={styles.botonBuscar} onPress={buscarProducto}>
+        <Text style={styles.textoBuscar}>Buscar</Text>
+      </TouchableOpacity>
 
       <View style={styles.resultadoContainer}>
         {cargando ? (
@@ -111,18 +84,16 @@ const PantallaEscaneo = ({ navigation }: any) => {
         ) : producto ? (
           <>
             <Text style={styles.resultadoTexto}>🔎 Resultado del escaneo:</Text>
-            <Text style={styles.linea}>SKU: {producto.itemid}</Text>
-            <Text style={styles.linea}>Coordenada: </Text>
-            <Text style={styles.linea}>Artículo: </Text>
-            <Text style={styles.linea}># Orden: {producto.orderid}</Text>
-            <Text style={styles.linea}>Detalle: </Text>
+            <Text style={styles.linea}>SKU: {producto.sku}</Text>
+            <Text style={styles.linea}>Coordenada: {producto.coordenada}</Text>
+            <Text style={styles.linea}>Artículo: {producto.articulo}</Text>
+            <Text style={styles.linea}>Orden: {producto.orden}</Text>
+            <Text style={styles.linea}>Detalle: {producto.detalle}</Text>
 
             <TouchableOpacity style={styles.botonClear} onPress={limpiar}>
               <Text style={styles.textoClear}>Borrar</Text>
             </TouchableOpacity>
           </>
-        ) : skuInput ? (
-          <Text style={styles.resultadoTexto}>Producto no encontrado ❌</Text>
         ) : (
           <Text style={styles.resultadoTexto}>Escanea un código o escribe el SKU</Text>
         )}
@@ -132,6 +103,8 @@ const PantallaEscaneo = ({ navigation }: any) => {
 };
 
 export default PantallaEscaneo;
+
+
 
 const styles = StyleSheet.create({
   container: {

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import { limpiarColorAsignado } from '../utils/colores'; // ✅ importamos función para liberar color
 
 const PantallaPerfil = () => {
   const navigation = useNavigation<any>();
@@ -24,7 +25,8 @@ const PantallaPerfil = () => {
 
   const cerrarSesion = async () => {
     await AsyncStorage.removeItem('usuarioLogueado');
-    Alert.alert('Sesión cerrada');
+    limpiarColorAsignado(); // ✅ Liberar el color cuando cierra sesión
+    Alert.alert('Sesión cerrada', 'Tu color ha sido liberado.');
     navigation.reset({
       index: 0,
       routes: [{ name: 'Login' }],

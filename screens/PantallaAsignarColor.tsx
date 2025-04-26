@@ -1,6 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { getColorAsignado } from '../utils/colores'; // 👈 importamos el getter del color asignado
+import Toast from 'react-native-toast-message';
 
 const PantallaInicio = () => {
   const navigation = useNavigation();
@@ -10,6 +12,18 @@ const PantallaInicio = () => {
   };
 
   const irAEscanear = () => {
+    const colorActual = getColorAsignado();
+
+    if (!colorActual) {
+      Toast.show({
+        type: 'error',
+        text1: 'Color no asignado',
+        text2: 'Primero debes asignarte un color.',
+        position: 'bottom',
+      });
+      return;
+    }
+
     navigation.navigate('Escaneo' as never);
   };
 
