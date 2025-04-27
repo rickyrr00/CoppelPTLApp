@@ -1,29 +1,23 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 const PantallaInicio = () => {
-  const navigation = useNavigation();
-
-  const irAAsignarColor = () => {
-    navigation.navigate('PantallaAsignarColor' as never);
-  };
-
-  const irAEscanear = () => {
-    navigation.navigate('Escaneo' as never);
-  };
+  const navigation = useNavigation<any>();
 
   return (
     <View style={styles.container}>
-      <Text style={styles.titulo}>Bienvenido al sistema PTL</Text>
+      <Text style={styles.titulo}>Menú Principal</Text>
 
-      <TouchableOpacity style={styles.boton} onPress={irAAsignarColor}>
-        <Text style={styles.textoBoton}>Asignar Color</Text>
+      <TouchableOpacity style={styles.boton} onPress={() => navigation.navigate('PantallaAsignarColor')}>
+        <Text style={styles.botonTexto}>Asignar Color</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={[styles.boton, styles.botonSecundario]} onPress={irAEscanear}>
-        <Text style={styles.textoBoton}>Ir a Escanear</Text>
+      <TouchableOpacity style={styles.boton} onPress={() => navigation.navigate('Escaneo')}>
+        <Text style={styles.botonTexto}>Ir a Escaneo</Text>
       </TouchableOpacity>
+
+      {/* Agregar más opciones aquí en el futuro */}
     </View>
   );
 };
@@ -33,31 +27,27 @@ export default PantallaInicio;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    padding: 30,
+    paddingTop: 60,
     backgroundColor: '#fff',
+    alignItems: 'center',
   },
   titulo: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 40,
-    textAlign: 'center',
-    color: '#333',
+    marginBottom: 30,
   },
   boton: {
     backgroundColor: '#0071ce',
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 10,
+    padding: 15,
+    borderRadius: 8,
     marginBottom: 20,
+    width: '80%',
+    alignItems: 'center',
   },
-  botonSecundario: {
-    backgroundColor: '#555',
-  },
-  textoBoton: {
+  botonTexto: {
     color: '#fff',
+    fontSize: 16,
     fontWeight: 'bold',
-    fontSize: 18,
   },
 });

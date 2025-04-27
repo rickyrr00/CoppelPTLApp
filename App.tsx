@@ -11,7 +11,7 @@ import PantallaTerminos from './screens/PantallaTerminos';
 import PantallaEscaneo from './screens/PantallaEscaneo';
 import PantallaInicio from './screens/PantallaInicio';
 import PantallaPerfil from './screens/PantallaPerfil';
-import PantallaAsignarColor from './screens/PantallaAsignarColor'; // 👈 nuevo import
+import PantallaAsignarColor from './screens/PantallaAsignarColor';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -22,7 +22,6 @@ const Tabs = () => {
       screenOptions={({ route }) => ({
         tabBarIcon: ({ color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap = 'home-outline';
-
           if (route.name === 'Inicio') iconName = 'home-outline';
           else if (route.name === 'Escaneo') iconName = 'scan-outline';
           else if (route.name === 'Perfil') iconName = 'person-outline';
@@ -50,7 +49,7 @@ export default function App() {
           <Stack.Screen name="Registro" component={PantallaRegistro} />
           <Stack.Screen name="Terminos" component={PantallaTerminos} />
           <Stack.Screen name="Tabs" component={Tabs} />
-          <Stack.Screen name="PantallaAsignarColor" component={PantallaAsignarColor} /> {/* 👈 nuevo screen */}
+          <Stack.Screen name="PantallaAsignarColor" component={PantallaAsignarColor} />
         </Stack.Navigator>
       </NavigationContainer>
       <Toast />

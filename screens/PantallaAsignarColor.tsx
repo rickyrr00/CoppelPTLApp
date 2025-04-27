@@ -1,77 +1,81 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { getColorAsignado } from '../utils/colores'; // 👈 importamos el getter del color asignado
-import Toast from 'react-native-toast-message';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { coloresDisponibles } from '../utils/colores';
 
-const PantallaInicio = () => {
-  const navigation = useNavigation();
+const PantallaAsignarColor = () => {
+  const [colorSeleccionado, setColorSeleccionado] = useState<string | null>(null);
+  const navigation = useNavigation<any>();
 
-  const irAAsignarColor = () => {
-    navigation.navigate('PantallaAsignarColor' as never);
-  };
-
-  const irAEscanear = () => {
-    const colorActual = getColorAsignado();
-
-    if (!colorActual) {
-      Toast.show({
-        type: 'error',
-        text1: 'Color no asignado',
-        text2: 'Primero debes asignarte un color.',
-        position: 'bottom',
-      });
-      return;
+  const asignarColor = async (color: string) => {
+    try {
+      await AsyncStorage.setItem('colorAsignado', color);
+      setColorSeleccionado(color);
+      Alert.alert('Color asignado', `Tu color es: ${color}`);
+      navigation.goBack();
+    } catch (error) {
+      console.log('Error asignando color:', error);
     }
-
-    navigation.navigate('Escaneo' as never);
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.titulo}>Bienvenido al sistema PTL</Text>
+      <Text style={styles.titulo}>Selecciona un Color</Text>
+      <View style={styles.grid}>
+        {coloresDisponibles.map((color) => (
+          <TouchableOpacity
+            key={color}
+            style={[styles.colorBox, { backgroundColor: color }]}
+            onPress={() => asignarColor(color)}
+          />
+        ))}
+      </View>
 
-      <TouchableOpacity style={styles.boton} onPress={irAAsignarColor}>
-        <Text style={styles.textoBoton}>Asignar Color</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={[styles.boton, styles.botonSecundario]} onPress={irAEscanear}>
-        <Text style={styles.textoBoton}>Ir a Escanear</Text>
+      <TouchableOpacity style={styles.botonCancelar} onPress={() => navigation.goBack()}>
+        <Text style={styles.botonCancelarTexto}>Cancelar</Text>
       </TouchableOpacity>
     </View>
   );
 };
 
-export default PantallaInicio;
+export default PantallaAsignarColor;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    padding: 30,
+    paddingTop: 60,
     backgroundColor: '#fff',
   },
   titulo: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 40,
-    textAlign: 'center',
-    color: '#333',
-  },
-  boton: {
-    backgroundColor: '#0071ce',
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 10,
     marginBottom: 20,
+    textAlign: 'center',
   },
-  botonSecundario: {
-    backgroundColor: '#555',
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
   },
-  textoBoton: {
+  colorBox: {
+    width: 70,
+    height: 70,
+    margin: 10,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#333',
+  },
+  botonCancelar: {
+    marginTop: 30,
+    backgroundColor: '#e74c3c',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  botonCancelarTexto: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 18,
   },
 });

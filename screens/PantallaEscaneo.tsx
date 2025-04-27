@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,47 +7,78 @@ import {
   TextInput,
   Keyboard,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNetInfo } from '../hooks/useNetInfo';
-import { getColorAsignado } from '../utils/colores'; // ✅ Importar bien
+import { escanearSKU, confirmarCubby } from '../services/api';
 
 const PantallaEscaneo = ({ navigation }: any) => {
   const [skuInput, setSkuInput] = useState('');
   const [producto, setProducto] = useState<any>(null);
   const [cargando, setCargando] = useState(false);
+  const [colorAsignado, setColorAsignado] = useState<string | null>(null);
   const inputRef = useRef<TextInput>(null);
   const isConnected = useNetInfo();
 
+  useEffect(() => {
+    const verificarColor = async () => {
+      const color = await AsyncStorage.getItem('colorAsignado');
+      if (color) {
+        setColorAsignado(color);
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'No tienes color asignado',
+          text2: 'Primero debes asignar un color',
+          position: 'bottom',
+        });
+        navigation.navigate('Inicio');
+      }
+    };
+
+    verificarColor();
+  }, []);
+
   const buscarProducto = async () => {
-    if (!getColorAsignado()) { // ✅ Validar que haya color asignado
-      Toast.show({
-        type: 'error',
-        text1: 'Color no asignado',
-        text2: 'Debes asignarte un color antes de escanear.',
-        position: 'bottom',
-      });
-      return;
-    }
-
     if (!skuInput.trim()) return;
-
+  
     Keyboard.dismiss();
     setCargando(true);
     setProducto(null);
-
-    // Aquí iría tu lógica real de búsqueda (mock por ahora)
-    setTimeout(() => {
+  
+    try {
+      const data = await escanearSKU(skuInput.trim());
       setProducto({
-        sku: skuInput,
-        coordenada: 'Módulo A1 - Estante 3',
-        articulo: 'Playera Deportiva',
-        orden: 'ORD-12345',
-        detalle: 'Playera talla M color azul',
+        sku: skuInput.trim(),
+        coordenada: `Cubby: ${data.assignedCubby}`,
+        articulo: data.productName,
+        orden: '',
+        detalle: '',
       });
-      setCargando(false);
-    }, 1500);
+  
+      Toast.show({
+        type: 'success',
+        text1: 'Producto encontrado',
+        text2: `SKU: ${skuInput.trim()}\nProducto: ${data.productName}`,
+        position: 'bottom',
+      });
+  
+    } catch (error: any) {
+      console.error('❌ Error en escaneo real:', error.response?.data || error.message);
+  
+      Toast.show({
+        type: 'error',
+        text1: 'Error al buscar',
+        text2: error.response?.data?.detail || error.message,
+        position: 'bottom',
+      });
+  
+      setProducto(null);
+    }
+  
+    setCargando(false);
   };
 
   const limpiar = () => {
@@ -58,25 +89,40 @@ const PantallaEscaneo = ({ navigation }: any) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.titulo}>Escaneo de Producto</Text>
+      <TouchableOpacity style={styles.botonRegresar} onPress={() => navigation.goBack()}>
+        <Text style={styles.textoRegresar}>← Regresar</Text>
+      </TouchableOpacity>
 
-      {!isConnected && (
-        <View style={styles.bannerOffline}>
-          <Text style={styles.textoOffline}>Estás sin conexión</Text>
+      <Text style={styles.titulo}>Escaneo de producto</Text>
+
+      {colorAsignado && (
+        <View style={[styles.colorAsignado, { backgroundColor: colorAsignado }]}>
+          <Text style={styles.colorAsignadoTexto}>Tu color: {colorAsignado}</Text>
         </View>
       )}
 
-      <TextInput
-        ref={inputRef}
-        style={styles.inputVisible}
-        placeholder="Escribe el SKU"
-        onChangeText={setSkuInput}
-        value={skuInput}
-      />
+      {!isConnected && (
+        <View style={styles.bannerOffline}>
+          <Text style={styles.textoOffline}>Estás sin conexión a internet</Text>
+        </View>
+      )}
 
-      <TouchableOpacity style={styles.botonBuscar} onPress={buscarProducto}>
-        <Text style={styles.textoBuscar}>Buscar</Text>
-      </TouchableOpacity>
+      <Text style={styles.textoGuia}>
+        Escanea un producto o escribe el SKU manualmente
+      </Text>
+
+      <View style={styles.inputGroup}>
+        <TextInput
+          ref={inputRef}
+          style={styles.inputVisible}
+          placeholder="Escribe el SKU"
+          onChangeText={setSkuInput}
+          value={skuInput}
+        />
+        <TouchableOpacity style={styles.botonBuscar} onPress={buscarProducto}>
+          <Text style={styles.textoBuscar}>Buscar</Text>
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.resultadoContainer}>
         {cargando ? (
@@ -87,13 +133,14 @@ const PantallaEscaneo = ({ navigation }: any) => {
             <Text style={styles.linea}>SKU: {producto.sku}</Text>
             <Text style={styles.linea}>Coordenada: {producto.coordenada}</Text>
             <Text style={styles.linea}>Artículo: {producto.articulo}</Text>
-            <Text style={styles.linea}>Orden: {producto.orden}</Text>
+            <Text style={styles.linea}># Orden: {producto.orden}</Text>
             <Text style={styles.linea}>Detalle: {producto.detalle}</Text>
-
             <TouchableOpacity style={styles.botonClear} onPress={limpiar}>
               <Text style={styles.textoClear}>Borrar</Text>
             </TouchableOpacity>
           </>
+        ) : skuInput ? (
+          <Text style={styles.resultadoTexto}>Producto no encontrado ❌</Text>
         ) : (
           <Text style={styles.resultadoTexto}>Escanea un código o escribe el SKU</Text>
         )}
@@ -103,8 +150,6 @@ const PantallaEscaneo = ({ navigation }: any) => {
 };
 
 export default PantallaEscaneo;
-
-
 
 const styles = StyleSheet.create({
   container: {
@@ -127,6 +172,16 @@ const styles = StyleSheet.create({
   textoRegresar: {
     fontSize: 18,
     color: '#0071ce',
+    fontWeight: 'bold',
+  },
+  colorAsignado: {
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 15,
+    alignItems: 'center',
+  },
+  colorAsignadoTexto: {
+    color: '#fff',
     fontWeight: 'bold',
   },
   textoGuia: {
@@ -172,6 +227,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 12,
+    textAlign: 'center',
   },
   linea: {
     fontSize: 16,
