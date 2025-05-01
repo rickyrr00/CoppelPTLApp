@@ -1,39 +1,77 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { coloresDisponibles } from '../utils/colores';
 
-const PantallaAsignarColor = () => {
+const PantallaAsignarColor = ({ navigation }: any) => {
   const [colorSeleccionado, setColorSeleccionado] = useState<string | null>(null);
-  const navigation = useNavigation<any>();
+  const [coloresOcupados, setColoresOcupados] = useState<string[]>([]);
 
-  const asignarColor = async (color: string) => {
-    try {
-      await AsyncStorage.setItem('colorAsignado', color);
-      setColorSeleccionado(color);
-      Alert.alert('Color asignado', `Tu color es: ${color}`);
-      navigation.goBack();
-    } catch (error) {
-      console.log('Error asignando color:', error);
+  useEffect(() => {
+    const cargarColoresOcupados = async () => {
+      const ocupados = await AsyncStorage.getItem('coloresOcupados');
+      if (ocupados) {
+        setColoresOcupados(JSON.parse(ocupados));
+      }
+    };
+    cargarColoresOcupados();
+  }, []);
+
+  const seleccionarColor = (color: string) => {
+    setColorSeleccionado(color);
+  };
+
+  const confirmarColor = async () => {
+    if (!colorSeleccionado) {
+      Alert.alert('Selecciona un color primero');
+      return;
     }
+
+    if (coloresOcupados.includes(colorSeleccionado)) {
+      Alert.alert('Color ocupado', 'Elige otro color que esté disponible');
+      return;
+    }
+
+    await AsyncStorage.setItem('colorAsignado', colorSeleccionado);
+    const nuevosOcupados = [...coloresOcupados, colorSeleccionado];
+    await AsyncStorage.setItem('coloresOcupados', JSON.stringify(nuevosOcupados));
+
+    Alert.alert('Color asignado', `Tu color ahora es: ${colorSeleccionado}`, [
+      { text: 'OK', onPress: () => navigation.goBack() },
+    ]);
+  };
+
+  const renderItem = ({ item }: { item: string }) => {
+    const ocupado = coloresOcupados.includes(item);
+    const seleccionado = item === colorSeleccionado;
+    return (
+      <TouchableOpacity
+        style={[
+          styles.colorCuadro,
+          { backgroundColor: item },
+          ocupado && styles.colorOcupado,
+          seleccionado && styles.colorSeleccionado,
+        ]}
+        onPress={() => !ocupado && seleccionarColor(item)}
+        disabled={ocupado}
+      />
+    );
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.titulo}>Selecciona un Color</Text>
-      <View style={styles.grid}>
-        {coloresDisponibles.map((color) => (
-          <TouchableOpacity
-            key={color}
-            style={[styles.colorBox, { backgroundColor: color }]}
-            onPress={() => asignarColor(color)}
-          />
-        ))}
-      </View>
+      <Text style={styles.titulo}>Selecciona tu color</Text>
 
-      <TouchableOpacity style={styles.botonCancelar} onPress={() => navigation.goBack()}>
-        <Text style={styles.botonCancelarTexto}>Cancelar</Text>
+      <FlatList
+        data={coloresDisponibles}
+        renderItem={renderItem}
+        keyExtractor={(item) => item}
+        numColumns={3}
+        contentContainerStyle={styles.listaColores}
+      />
+
+      <TouchableOpacity style={styles.botonConfirmar} onPress={confirmarColor}>
+        <Text style={styles.textoConfirmar}>Confirmar Color</Text>
       </TouchableOpacity>
     </View>
   );
@@ -44,38 +82,45 @@ export default PantallaAsignarColor;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 30,
-    paddingTop: 60,
     backgroundColor: '#fff',
+    padding: 20,
+    paddingTop: 60,
   },
   titulo: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 20,
     textAlign: 'center',
   },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  listaColores: {
+    alignItems: 'center',
     justifyContent: 'center',
   },
-  colorBox: {
-    width: 70,
-    height: 70,
+  colorCuadro: {
+    width: 80,
+    height: 80,
     margin: 10,
-    borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#333',
+    borderRadius: 10,
   },
-  botonCancelar: {
-    marginTop: 30,
-    backgroundColor: '#e74c3c',
+  colorOcupado: {
+    opacity: 0.4,
+  },
+  colorSeleccionado: {
+    borderWidth: 3,
+    borderColor: '#0071ce',
+  },
+  botonConfirmar: {
+    backgroundColor: '#0071ce',
     padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
+    borderRadius: 10,
+    marginTop: 30,
+    alignSelf: 'center',
+    paddingHorizontal: 40,
   },
-  botonCancelarTexto: {
+  textoConfirmar: {
     color: '#fff',
     fontWeight: 'bold',
+    fontSize: 18,
   },
 });
+

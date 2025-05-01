@@ -7,12 +7,11 @@ import {
   TextInput,
   Keyboard,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNetInfo } from '../hooks/useNetInfo';
-import { escanearSKU, confirmarCubby } from '../services/api';
+import { escanearSKU } from '../services/api';
 
 const PantallaEscaneo = ({ navigation }: any) => {
   const [skuInput, setSkuInput] = useState('');
@@ -41,13 +40,19 @@ const PantallaEscaneo = ({ navigation }: any) => {
     verificarColor();
   }, []);
 
+  useEffect(() => {
+    if (skuInput.trim()) {
+      buscarProducto();
+    }
+  }, [skuInput]);
+
   const buscarProducto = async () => {
     if (!skuInput.trim()) return;
-  
+
     Keyboard.dismiss();
     setCargando(true);
     setProducto(null);
-  
+
     try {
       const data = await escanearSKU(skuInput.trim());
       setProducto({
@@ -57,27 +62,24 @@ const PantallaEscaneo = ({ navigation }: any) => {
         orden: '',
         detalle: '',
       });
-  
+
       Toast.show({
         type: 'success',
         text1: 'Producto encontrado',
-        text2: `SKU: ${skuInput.trim()}\nProducto: ${data.productName}`,
+        text2: `SKU: ${skuInput.trim()}`,
         position: 'bottom',
       });
-  
+
     } catch (error: any) {
-      console.error('❌ Error en escaneo real:', error.response?.data || error.message);
-  
+      console.error('❌ Error en escaneo:', error.response?.data || error.message);
       Toast.show({
         type: 'error',
-        text1: 'Error al buscar',
+        text1: 'Error',
         text2: error.response?.data?.detail || error.message,
         position: 'bottom',
       });
-  
-      setProducto(null);
     }
-  
+
     setCargando(false);
   };
 
@@ -116,12 +118,13 @@ const PantallaEscaneo = ({ navigation }: any) => {
           ref={inputRef}
           style={styles.inputVisible}
           placeholder="Escribe el SKU"
-          onChangeText={setSkuInput}
+          onChangeText={(text) => {
+            limpiar();
+            setSkuInput(text);
+          }}
           value={skuInput}
+          autoFocus
         />
-        <TouchableOpacity style={styles.botonBuscar} onPress={buscarProducto}>
-          <Text style={styles.textoBuscar}>Buscar</Text>
-        </TouchableOpacity>
       </View>
 
       <View style={styles.resultadoContainer}>
@@ -139,10 +142,8 @@ const PantallaEscaneo = ({ navigation }: any) => {
               <Text style={styles.textoClear}>Borrar</Text>
             </TouchableOpacity>
           </>
-        ) : skuInput ? (
-          <Text style={styles.resultadoTexto}>Producto no encontrado ❌</Text>
         ) : (
-          <Text style={styles.resultadoTexto}>Escanea un código o escribe el SKU</Text>
+          <Text style={styles.resultadoTexto}>Escanea o escribe un SKU</Text>
         )}
       </View>
     </View>

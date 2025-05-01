@@ -1,23 +1,36 @@
+// screens/PantallaInicio.tsx
+
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 
-const PantallaInicio = () => {
-  const navigation = useNavigation<any>();
-
+const PantallaInicio = ({ navigation }: any) => {
   return (
     <View style={styles.container}>
-      <Text style={styles.titulo}>Menú Principal</Text>
+      <Text style={styles.titulo}>Inicio</Text>
 
-      <TouchableOpacity style={styles.boton} onPress={() => navigation.navigate('PantallaAsignarColor')}>
-        <Text style={styles.botonTexto}>Asignar Color</Text>
-      </TouchableOpacity>
+      <View style={styles.grid}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.button,
+            { opacity: pressed ? 0.8 : 1 },
+          ]}
+          onPress={() => navigation.navigate('PantallaAsignarColor')}
+        >
+          <Text style={styles.icono}>🎨</Text>
+          <Text style={styles.buttonTexto}>Color</Text>
+        </Pressable>
 
-      <TouchableOpacity style={styles.boton} onPress={() => navigation.navigate('Escaneo')}>
-        <Text style={styles.botonTexto}>Ir a Escaneo</Text>
-      </TouchableOpacity>
-
-      {/* Agregar más opciones aquí en el futuro */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.button,
+            { opacity: pressed ? 0.8 : 1 },
+          ]}
+          onPress={() => navigation.navigate('Escaneo')}
+        >
+          <Text style={styles.icono}>📷</Text>
+          <Text style={styles.buttonTexto}>Escanear</Text>
+        </Pressable>
+      </View>
     </View>
   );
 };
@@ -27,27 +40,42 @@ export default PantallaInicio;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 30,
+    backgroundColor: '#ffffff',
     paddingTop: 60,
-    backgroundColor: '#fff',
-    alignItems: 'center',
+    paddingHorizontal: 20,
   },
   titulo: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
+    textAlign: 'center',
     marginBottom: 30,
+    color: '#0071ce',
   },
-  boton: {
-    backgroundColor: '#0071ce',
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 20,
-    width: '80%',
+  grid: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 30,
+  },
+  button: {
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    backgroundColor: '#f0f4f8',
     alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
   },
-  botonTexto: {
-    color: '#fff',
+  icono: {
+    fontSize: 45,
+    marginBottom: 8,
+  },
+  buttonTexto: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: '#333',
   },
 });
