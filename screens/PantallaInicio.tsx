@@ -1,35 +1,47 @@
-// screens/PantallaInicio.tsx
-
 import React from 'react';
-import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 
 const PantallaInicio = ({ navigation }: any) => {
   return (
     <View style={styles.container}>
       <Text style={styles.titulo}>Inicio</Text>
 
-      <View style={styles.grid}>
-        <Pressable
-          style={({ pressed }) => [
-            styles.button,
-            { opacity: pressed ? 0.8 : 1 },
-          ]}
+      <View style={styles.botonesContainer}>
+        <TouchableOpacity
+          style={styles.boton}
           onPress={() => navigation.navigate('PantallaAsignarColor')}
         >
-          <Text style={styles.icono}>🎨</Text>
-          <Text style={styles.buttonTexto}>Color</Text>
-        </Pressable>
+          <Image
+            source={require('../assets/IconAssets/led-icon.png')}
+            style={styles.icono}
+            resizeMode="contain"
+          />
+          <Text style={styles.texto}>Color</Text>
+        </TouchableOpacity>
 
-        <Pressable
-          style={({ pressed }) => [
-            styles.button,
-            { opacity: pressed ? 0.8 : 1 },
-          ]}
+        <TouchableOpacity
+          style={styles.boton}
           onPress={() => navigation.navigate('Escaneo')}
         >
-          <Text style={styles.icono}>📷</Text>
-          <Text style={styles.buttonTexto}>Escanear</Text>
-        </Pressable>
+          <Image
+            source={require('../assets/IconAssets/scan-icon.png')}
+            style={styles.icono}
+            resizeMode="contain"
+          />
+          <Text style={styles.texto}>Escanear</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.boton}
+          onPress={() => navigation.navigate('Historial')}
+        >
+          <Image
+            source={require('../assets/IconAssets/historial-icon.png')}
+            style={styles.icono}
+            resizeMode="contain"
+          />
+          <Text style={styles.texto}>Historial</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -40,40 +52,42 @@ export default PantallaInicio;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fff',
     paddingTop: 60,
     paddingHorizontal: 20,
+    alignItems: 'center',
   },
   titulo: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 30,
     color: '#0071ce',
+    marginBottom: 30,
   },
-  grid: {
+  botonesContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: 30,
+    gap: 20,
   },
-  button: {
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    backgroundColor: '#f0f4f8',
+  boton: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 20,
+    padding: 20,
     alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 10,
+    width: 140,
+    margin: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
-    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 5,
+    elevation: 3,
   },
   icono: {
-    fontSize: 45,
-    marginBottom: 8,
+    width: 60,
+    height: 60,
+    marginBottom: 10,
   },
-  buttonTexto: {
+  texto: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',

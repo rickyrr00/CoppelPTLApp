@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { coloresDisponibles } from '../utils/colores';
+import { coloresDisponibles, mapaColores } from '../utils/colores';
 
 const PantallaAsignarColor = ({ navigation }: any) => {
   const [colorSeleccionado, setColorSeleccionado] = useState<string | null>(null);
@@ -32,7 +32,10 @@ const PantallaAsignarColor = ({ navigation }: any) => {
       return;
     }
 
+    const colorIndex = mapaColores[colorSeleccionado];
     await AsyncStorage.setItem('colorAsignado', colorSeleccionado);
+    await AsyncStorage.setItem('colorIndex', String(colorIndex));
+
     const nuevosOcupados = [...coloresOcupados, colorSeleccionado];
     await AsyncStorage.setItem('coloresOcupados', JSON.stringify(nuevosOcupados));
 
@@ -44,6 +47,7 @@ const PantallaAsignarColor = ({ navigation }: any) => {
   const renderItem = ({ item }: { item: string }) => {
     const ocupado = coloresOcupados.includes(item);
     const seleccionado = item === colorSeleccionado;
+
     return (
       <TouchableOpacity
         style={[
@@ -54,12 +58,18 @@ const PantallaAsignarColor = ({ navigation }: any) => {
         ]}
         onPress={() => !ocupado && seleccionarColor(item)}
         disabled={ocupado}
-      />
+      >
+        {ocupado && <Text style={styles.textoOcupado}>X</Text>}
+      </TouchableOpacity>
     );
   };
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity style={styles.botonRegresar} onPress={() => navigation.goBack()}>
+        <Text style={styles.textoRegresar}>← Regresar</Text>
+      </TouchableOpacity>
+
       <Text style={styles.titulo}>Selecciona tu color</Text>
 
       <FlatList
@@ -86,6 +96,16 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 60,
   },
+  botonRegresar: {
+    position: 'absolute',
+    top: 30,
+    left: 20,
+  },
+  textoRegresar: {
+    fontSize: 18,
+    color: '#0071ce',
+    fontWeight: 'bold',
+  },
   titulo: {
     fontSize: 22,
     fontWeight: 'bold',
@@ -101,6 +121,8 @@ const styles = StyleSheet.create({
     height: 80,
     margin: 10,
     borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   colorOcupado: {
     opacity: 0.4,
@@ -108,6 +130,12 @@ const styles = StyleSheet.create({
   colorSeleccionado: {
     borderWidth: 3,
     borderColor: '#0071ce',
+  },
+  textoOcupado: {
+    color: '#000',
+    fontWeight: 'bold',
+    fontSize: 22,
+    position: 'absolute',
   },
   botonConfirmar: {
     backgroundColor: '#0071ce',
@@ -123,4 +151,3 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
 });
-

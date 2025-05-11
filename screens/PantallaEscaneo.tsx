@@ -18,14 +18,18 @@ const PantallaEscaneo = ({ navigation }: any) => {
   const [producto, setProducto] = useState<any>(null);
   const [cargando, setCargando] = useState(false);
   const [colorAsignado, setColorAsignado] = useState<string | null>(null);
+  const [colorIndex, setColorIndex] = useState<number | null>(null);
   const inputRef = useRef<TextInput>(null);
   const isConnected = useNetInfo();
 
   useEffect(() => {
     const verificarColor = async () => {
       const color = await AsyncStorage.getItem('colorAsignado');
-      if (color) {
+      const index = await AsyncStorage.getItem('colorIndex');
+
+      if (color && index) {
         setColorAsignado(color);
+        setColorIndex(Number(index));
       } else {
         Toast.show({
           type: 'error',
@@ -40,23 +44,23 @@ const PantallaEscaneo = ({ navigation }: any) => {
     verificarColor();
   }, []);
 
-  useEffect(() => {
-    if (skuInput.trim()) {
-      buscarProducto();
-    }
-  }, [skuInput]);
-
   const buscarProducto = async () => {
-    if (!skuInput.trim()) return;
+    const sku = skuInput.trim();
+    if (!sku) return;
 
     Keyboard.dismiss();
     setCargando(true);
+
     setProducto(null);
 
     try {
-      const data = await escanearSKU(skuInput.trim());
+      const data = await escanearSKU(sku, colorIndex);
+
+      inputRef.current?.clear();
+      setSkuInput('');
+
       setProducto({
-        sku: skuInput.trim(),
+        sku,
         coordenada: `Cubby: ${data.assignedCubby}`,
         articulo: data.productName,
         orden: '',
@@ -66,16 +70,15 @@ const PantallaEscaneo = ({ navigation }: any) => {
       Toast.show({
         type: 'success',
         text1: 'Producto encontrado',
-        text2: `SKU: ${skuInput.trim()}`,
+        text2: `SKU: ${sku}`,
         position: 'bottom',
       });
-
     } catch (error: any) {
       console.error('❌ Error en escaneo:', error.response?.data || error.message);
       Toast.show({
         type: 'error',
         text1: 'Error',
-        text2: error.response?.data?.detail || error.message,
+        text2: error.response?.data?.detail?.[0]?.msg || error.message,
         position: 'bottom',
       });
     }
@@ -118,13 +121,13 @@ const PantallaEscaneo = ({ navigation }: any) => {
           ref={inputRef}
           style={styles.inputVisible}
           placeholder="Escribe el SKU"
-          onChangeText={(text) => {
-            limpiar();
-            setSkuInput(text);
-          }}
+          onChangeText={setSkuInput}
           value={skuInput}
           autoFocus
         />
+        <TouchableOpacity style={styles.botonBuscar} onPress={buscarProducto}>
+          <Text style={styles.textoBuscar}>Buscar</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.resultadoContainer}>
