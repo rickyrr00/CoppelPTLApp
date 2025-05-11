@@ -106,8 +106,7 @@ const PantallaEscaneo = ({ navigation }: any) => {
       <Text style={styles.titulo}>Escaneo de producto</Text>
 
       {colorAsignado && (
-        <View style={[styles.colorAsignado, { backgroundColor: colorAsignado }]}>
-          <Text style={styles.colorAsignadoTexto}>Tu color: {colorAsignado}</Text>
+        <View style={[styles.colorAsignado, { backgroundColor: colorAsignado }]}> <Text style={styles.colorAsignadoTexto}>Tu color: {colorAsignado}</Text>
         </View>
       )}
 
@@ -127,7 +126,6 @@ const PantallaEscaneo = ({ navigation }: any) => {
           style={styles.inputVisible}
           placeholder="Escribe el SKU"
           value={skuInput}
-          autoFocus
           onChangeText={(text) => {
             setSkuInput(text);
             const now = Date.now();
@@ -140,6 +138,13 @@ const PantallaEscaneo = ({ navigation }: any) => {
             }
             lastInputTimeRef.current = now;
           }}
+          blurOnSubmit={true}
+          returnKeyType="done"
+          importantForAutofill="no"
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="numeric"
+          showSoftInputOnFocus={false} // evita que se abra el teclado
         />
         <TouchableOpacity style={styles.botonBuscar} onPress={buscarProducto}>
           <Text style={styles.textoBuscar}>Buscar</Text>
