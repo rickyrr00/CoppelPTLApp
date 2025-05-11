@@ -18,10 +18,13 @@
       }
     },
     "android": {
+      "package": "com.anonymous.coppelptl",
+      "versionCode": 1,
+      "label": "Coppel PTL",
+      "icon": "./assets/Logo_apk.png",
       "permissions": [
         "android.permission.CAMERA"
       ],
-      "package": "com.anonymous.coppelptl",
       "adaptiveIcon": {
         "foregroundImage": "./assets/Logo_apk.png",
         "backgroundColor": "#ffcc00"

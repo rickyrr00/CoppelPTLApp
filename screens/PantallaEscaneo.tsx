@@ -20,6 +20,7 @@ const PantallaEscaneo = ({ navigation }: any) => {
   const [colorAsignado, setColorAsignado] = useState<string | null>(null);
   const [colorIndex, setColorIndex] = useState<number | null>(null);
   const inputRef = useRef<TextInput>(null);
+  const inputTimestamp = useRef<number | null>(null);
   const isConnected = useNetInfo();
 
   useEffect(() => {
@@ -44,20 +45,18 @@ const PantallaEscaneo = ({ navigation }: any) => {
     verificarColor();
   }, []);
 
-  const buscarProducto = async () => {
-    const sku = skuInput.trim();
+  const buscarProductoAuto = async (skuEscaneado: string) => {
+    const sku = skuEscaneado.trim();
     if (!sku) return;
 
     Keyboard.dismiss();
     setCargando(true);
-
     setProducto(null);
 
     try {
       const data = await escanearSKU(sku, colorIndex);
-
-      inputRef.current?.clear();
       setSkuInput('');
+      inputRef.current?.clear();
 
       setProducto({
         sku,
@@ -84,6 +83,12 @@ const PantallaEscaneo = ({ navigation }: any) => {
     }
 
     setCargando(false);
+  };
+
+  const buscarProducto = () => {
+    if (skuInput.trim()) {
+      buscarProductoAuto(skuInput);
+    }
   };
 
   const limpiar = () => {
@@ -121,7 +126,16 @@ const PantallaEscaneo = ({ navigation }: any) => {
           ref={inputRef}
           style={styles.inputVisible}
           placeholder="Escribe el SKU"
-          onChangeText={setSkuInput}
+          onChangeText={(text) => {
+            setSkuInput(text);
+            if (text.length >= 5) {
+              const now = Date.now();
+              if (inputTimestamp.current && now - inputTimestamp.current < 100) {
+                buscarProductoAuto(text);
+              }
+              inputTimestamp.current = now;
+            }
+          }}
           value={skuInput}
           autoFocus
         />
