@@ -20,7 +20,7 @@ const PantallaEscaneo = ({ navigation }: any) => {
   const [colorAsignado, setColorAsignado] = useState<string | null>(null);
   const [colorIndex, setColorIndex] = useState<number | null>(null);
   const inputRef = useRef<TextInput>(null);
-  const inputTimestamp = useRef<number | null>(null);
+  const lastInputTimeRef = useRef<number | null>(null);
   const isConnected = useNetInfo();
 
   useEffect(() => {
@@ -118,7 +118,7 @@ const PantallaEscaneo = ({ navigation }: any) => {
       )}
 
       <Text style={styles.textoGuia}>
-        Escanea un producto o escribe el SKU manualmente
+        Escanea un producto con el lector o escribe el SKU manualmente
       </Text>
 
       <View style={styles.inputGroup}>
@@ -126,18 +126,20 @@ const PantallaEscaneo = ({ navigation }: any) => {
           ref={inputRef}
           style={styles.inputVisible}
           placeholder="Escribe el SKU"
-          onChangeText={(text) => {
-            setSkuInput(text);
-            if (text.length >= 5) {
-              const now = Date.now();
-              if (inputTimestamp.current && now - inputTimestamp.current < 100) {
-                buscarProductoAuto(text);
-              }
-              inputTimestamp.current = now;
-            }
-          }}
           value={skuInput}
           autoFocus
+          onChangeText={(text) => {
+            setSkuInput(text);
+            const now = Date.now();
+            if (
+              text.length >= 6 &&
+              lastInputTimeRef.current &&
+              now - lastInputTimeRef.current < 100
+            ) {
+              buscarProductoAuto(text);
+            }
+            lastInputTimeRef.current = now;
+          }}
         />
         <TouchableOpacity style={styles.botonBuscar} onPress={buscarProducto}>
           <Text style={styles.textoBuscar}>Buscar</Text>
