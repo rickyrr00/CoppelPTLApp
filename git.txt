@@ -16,3 +16,12 @@ git push
 #make build
 
 npx eas build --platform android --profile preview
+
+
+/////////////////////////////////////////////////////////
+Que colores estan ocupados
+console.log(JSON.parse(localStorage.getItem("coloresOcupados") || "[]"));
+
+Eliminar colores ocupados
+localStorage.removeItem("coloresOcupados");
+console.log("✅ coloresOcupados eliminado");

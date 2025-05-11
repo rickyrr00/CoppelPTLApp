@@ -1,3 +1,5 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 export const coloresDisponibles = [
   '#FF3B30', // red
   '#34C759', // green
@@ -16,20 +18,25 @@ export const mapaColores: { [key: string]: number } = {
   '#AF52DE': 5, // purple
 };
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
 export const limpiarColorAsignado = async () => {
-  const color = await AsyncStorage.getItem('colorAsignado');
+  try {
+    const color = await AsyncStorage.getItem('colorAsignado');
 
-  if (color) {
-    await AsyncStorage.removeItem('colorAsignado');
-    await AsyncStorage.removeItem('colorIndex');
+    if (color) {
+      // Borra color e índice
+      await AsyncStorage.multiRemove(['colorAsignado', 'colorIndex']);
 
-    const ocupados = await AsyncStorage.getItem('coloresOcupados');
-    if (ocupados) {
-      const lista = JSON.parse(ocupados);
-      const nuevaLista = lista.filter((c: string) => c !== color);
-      await AsyncStorage.setItem('coloresOcupados', JSON.stringify(nuevaLista));
+      // Revisa y actualiza colores ocupados
+      const ocupados = await AsyncStorage.getItem('coloresOcupados');
+      if (ocupados) {
+        const lista = JSON.parse(ocupados);
+        if (Array.isArray(lista)) {
+          const nuevaLista = lista.filter((c: string) => c !== color);
+          await AsyncStorage.setItem('coloresOcupados', JSON.stringify(nuevaLista));
+        }
+      }
     }
+  } catch (error) {
+    console.error('Error al liberar color asignado:', error);
   }
 };

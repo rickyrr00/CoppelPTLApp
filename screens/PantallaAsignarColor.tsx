@@ -22,27 +22,29 @@ const PantallaAsignarColor = ({ navigation }: any) => {
   };
 
   const confirmarColor = async () => {
-    if (!colorSeleccionado) {
-      Alert.alert('Selecciona un color primero');
-      return;
-    }
+  if (!colorSeleccionado) {
+    Alert.alert('Selecciona un color primero');
+    return;
+  }
 
-    if (coloresOcupados.includes(colorSeleccionado)) {
-      Alert.alert('Color ocupado', 'Elige otro color que esté disponible');
-      return;
-    }
+  if (coloresOcupados.includes(colorSeleccionado)) {
+    Alert.alert('Color ocupado', 'Elige otro color que esté disponible');
+    return;
+  }
 
-    const colorIndex = mapaColores[colorSeleccionado];
-    await AsyncStorage.setItem('colorAsignado', colorSeleccionado);
-    await AsyncStorage.setItem('colorIndex', String(colorIndex));
+  const colorIndex = mapaColores[colorSeleccionado];
+  await AsyncStorage.setItem('colorAsignado', colorSeleccionado);
+  await AsyncStorage.setItem('colorIndex', String(colorIndex));
 
-    const nuevosOcupados = [...coloresOcupados, colorSeleccionado];
-    await AsyncStorage.setItem('coloresOcupados', JSON.stringify(nuevosOcupados));
+  // Asegurar que no haya duplicados en coloresOcupados
+  const nuevosOcupados = Array.from(new Set([...coloresOcupados, colorSeleccionado]));
+  await AsyncStorage.setItem('coloresOcupados', JSON.stringify(nuevosOcupados));
 
-    Alert.alert('Color asignado', `Tu color ahora es: ${colorSeleccionado}`, [
-      { text: 'OK', onPress: () => navigation.goBack() },
-    ]);
-  };
+  Alert.alert('Color asignado', `Tu color ahora es: ${colorSeleccionado}`, [
+    { text: 'OK', onPress: () => navigation.goBack() },
+  ]);
+};
+
 
   const renderItem = ({ item }: { item: string }) => {
     const ocupado = coloresOcupados.includes(item);
