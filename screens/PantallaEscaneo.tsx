@@ -14,7 +14,6 @@ import { useNetInfo } from '../hooks/useNetInfo';
 import { escanearSKU } from '../services/api';
 
 const PantallaEscaneo = ({ navigation }: any) => {
-  const [skuInput, setSkuInput] = useState('');
   const [producto, setProducto] = useState<any>(null);
   const [cargando, setCargando] = useState(false);
   const [colorAsignado, setColorAsignado] = useState<string | null>(null);
@@ -59,8 +58,8 @@ const PantallaEscaneo = ({ navigation }: any) => {
 
     try {
       const data = await escanearSKU(sku.trim(), colorIndex);
-      setSkuInput('');
       inputRef.current?.clear();
+      inputRef.current?.focus();
 
       setProducto({
         sku,
@@ -90,10 +89,9 @@ const PantallaEscaneo = ({ navigation }: any) => {
   };
 
   const limpiar = () => {
-    setSkuInput('');
     setProducto(null);
     inputRef.current?.clear();
-    inputRef.current?.focus(); // reenfoca para el siguiente escaneo
+    inputRef.current?.focus();
   };
 
   return (
@@ -118,17 +116,16 @@ const PantallaEscaneo = ({ navigation }: any) => {
 
       <Text style={styles.textoGuia}>Escanea un producto con el lector físico</Text>
 
-      {/* Input visible para capturar escaneo */}
-      <View style={styles.inputCaptura}>
+      {/* Input visible con botón de limpiar */}
+      <View style={styles.inputRow}>
         <TextInput
           ref={inputRef}
           style={styles.inputVisible}
           placeholder="Escanea un SKU"
-          value={skuInput}
           onChangeText={(text) => {
-            setSkuInput(text);
-            console.log('🧪 Recibido:', text);
+            inputRef.current?.focus();
             if (text.length >= 6) {
+              setProducto(null);
               buscarProductoAuto(text);
             }
           }}
@@ -136,6 +133,9 @@ const PantallaEscaneo = ({ navigation }: any) => {
           showSoftInputOnFocus={false}
           keyboardType="numeric"
         />
+        <TouchableOpacity style={styles.botonClearInput} onPress={limpiar}>
+          <Text style={styles.textoClearInput}>❌</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.resultadoContainer}>
@@ -213,9 +213,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#333',
   },
-  inputCaptura: {
-    marginBottom: 20,
+  inputRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
   },
   inputVisible: {
     height: 50,
@@ -226,6 +228,18 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: 'center',
     borderRadius: 8,
+  },
+  botonClearInput: {
+    marginLeft: 10,
+    backgroundColor: '#e0e0e0',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  textoClearInput: {
+    fontSize: 18,
+    color: '#333',
+    fontWeight: 'bold',
   },
   resultadoContainer: {
     borderWidth: 2,
