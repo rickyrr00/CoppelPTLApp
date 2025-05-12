@@ -20,14 +20,12 @@ const PantallaEscaneo = ({ navigation }: any) => {
   const [colorAsignado, setColorAsignado] = useState<string | null>(null);
   const [colorIndex, setColorIndex] = useState<number | null>(null);
   const inputRef = useRef<TextInput>(null);
-  const lastInputTimeRef = useRef<number | null>(null);
   const isConnected = useNetInfo();
 
   useEffect(() => {
     const verificarColor = async () => {
       const color = await AsyncStorage.getItem('colorAsignado');
       const index = await AsyncStorage.getItem('colorIndex');
-
       if (color && index !== null && !isNaN(Number(index))) {
         setColorAsignado(color);
         setColorIndex(Number(index));
@@ -41,30 +39,26 @@ const PantallaEscaneo = ({ navigation }: any) => {
         navigation.navigate('Inicio');
       }
     };
-
     verificarColor();
   }, []);
 
-  const buscarProductoAuto = async (skuEscaneado: string) => {
-    const sku = skuEscaneado.trim();
-    if (!sku) return;
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      inputRef.current?.focus();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
 
-    if (colorIndex === null) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'No hay color asignado. No se puede buscar producto.',
-        position: 'bottom',
-      });
-      return;
-    }
+  const buscarProductoAuto = async (sku: string) => {
+    if (!sku.trim()) return;
+    if (colorIndex === null) return;
 
-    Keyboard.dismiss();
     setCargando(true);
     setProducto(null);
+    Keyboard.dismiss();
 
     try {
-      const data = await escanearSKU(sku, colorIndex);
+      const data = await escanearSKU(sku.trim(), colorIndex);
       setSkuInput('');
       inputRef.current?.clear();
 
@@ -95,16 +89,11 @@ const PantallaEscaneo = ({ navigation }: any) => {
     setCargando(false);
   };
 
-  const buscarProducto = () => {
-    if (skuInput.trim()) {
-      buscarProductoAuto(skuInput);
-    }
-  };
-
   const limpiar = () => {
     setSkuInput('');
     setProducto(null);
     inputRef.current?.clear();
+    inputRef.current?.focus(); // reenfoca para el siguiente escaneo
   };
 
   return (
@@ -127,39 +116,26 @@ const PantallaEscaneo = ({ navigation }: any) => {
         </View>
       )}
 
-      <Text style={styles.textoGuia}>
-        Escanea un producto con el lector o escribe el SKU manualmente
-      </Text>
+      <Text style={styles.textoGuia}>Escanea un producto con el lector físico</Text>
 
-      <View style={styles.inputGroup}>
+      {/* Input visible para capturar escaneo */}
+      <View style={styles.inputCaptura}>
         <TextInput
           ref={inputRef}
           style={styles.inputVisible}
-          placeholder="Escribe el SKU"
+          placeholder="Escanea un SKU"
           value={skuInput}
           onChangeText={(text) => {
             setSkuInput(text);
-            const now = Date.now();
-            if (
-              text.length >= 6 &&
-              lastInputTimeRef.current &&
-              now - lastInputTimeRef.current < 100
-            ) {
+            console.log('🧪 Recibido:', text);
+            if (text.length >= 6) {
               buscarProductoAuto(text);
             }
-            lastInputTimeRef.current = now;
           }}
-          blurOnSubmit={true}
-          returnKeyType="done"
-          importantForAutofill="no"
-          autoCapitalize="none"
-          autoCorrect={false}
+          autoFocus
+          showSoftInputOnFocus={false}
           keyboardType="numeric"
-          showSoftInputOnFocus={false} // evita que se abra el teclado
         />
-        <TouchableOpacity style={styles.botonBuscar} onPress={buscarProducto}>
-          <Text style={styles.textoBuscar}>Buscar</Text>
-        </TouchableOpacity>
       </View>
 
       <View style={styles.resultadoContainer}>
@@ -178,7 +154,7 @@ const PantallaEscaneo = ({ navigation }: any) => {
             </TouchableOpacity>
           </>
         ) : (
-          <Text style={styles.resultadoTexto}>Escanea o escribe un SKU</Text>
+          <Text style={styles.resultadoTexto}>Esperando escaneo...</Text>
         )}
       </View>
     </View>
@@ -194,12 +170,6 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingTop: 60,
   },
-  titulo: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
   botonRegresar: {
     position: 'absolute',
     top: 30,
@@ -209,6 +179,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#0071ce',
     fontWeight: 'bold',
+  },
+  titulo: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
   },
   colorAsignado: {
     padding: 10,
@@ -220,35 +196,36 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
+  bannerOffline: {
+    backgroundColor: '#f39c12',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 15,
+  },
+  textoOffline: {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
   textoGuia: {
     fontSize: 16,
     marginBottom: 10,
     textAlign: 'center',
     color: '#333',
   },
-  inputGroup: {
-    flexDirection: 'row',
+  inputCaptura: {
     marginBottom: 20,
+    alignItems: 'center',
   },
   inputVisible: {
-    flex: 1,
+    height: 50,
+    width: 220,
+    borderColor: '#ccc',
     borderWidth: 1,
-    borderColor: '#999',
-    padding: 12,
+    paddingHorizontal: 10,
     fontSize: 18,
+    textAlign: 'center',
     borderRadius: 8,
-  },
-  botonBuscar: {
-    backgroundColor: '#0071ce',
-    marginLeft: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    borderRadius: 8,
-    justifyContent: 'center',
-  },
-  textoBuscar: {
-    color: '#fff',
-    fontWeight: 'bold',
   },
   resultadoContainer: {
     borderWidth: 2,
@@ -282,16 +259,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
-  },
-  bannerOffline: {
-    backgroundColor: '#f39c12',
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 15,
-  },
-  textoOffline: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: 'bold',
   },
 });
