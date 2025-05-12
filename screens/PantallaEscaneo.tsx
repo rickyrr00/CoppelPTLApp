@@ -28,7 +28,7 @@ const PantallaEscaneo = ({ navigation }: any) => {
       const color = await AsyncStorage.getItem('colorAsignado');
       const index = await AsyncStorage.getItem('colorIndex');
 
-      if (color && index) {
+      if (color && index !== null && !isNaN(Number(index))) {
         setColorAsignado(color);
         setColorIndex(Number(index));
       } else {
@@ -48,6 +48,16 @@ const PantallaEscaneo = ({ navigation }: any) => {
   const buscarProductoAuto = async (skuEscaneado: string) => {
     const sku = skuEscaneado.trim();
     if (!sku) return;
+
+    if (colorIndex === null) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'No hay color asignado. No se puede buscar producto.',
+        position: 'bottom',
+      });
+      return;
+    }
 
     Keyboard.dismiss();
     setCargando(true);
@@ -106,7 +116,8 @@ const PantallaEscaneo = ({ navigation }: any) => {
       <Text style={styles.titulo}>Escaneo de producto</Text>
 
       {colorAsignado && (
-        <View style={[styles.colorAsignado, { backgroundColor: colorAsignado }]}> <Text style={styles.colorAsignadoTexto}>Tu color: {colorAsignado}</Text>
+        <View style={[styles.colorAsignado, { backgroundColor: colorAsignado }]}>
+          <Text style={styles.colorAsignadoTexto}>Tu color: {colorAsignado}</Text>
         </View>
       )}
 
