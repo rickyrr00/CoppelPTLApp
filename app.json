@@ -2,6 +2,7 @@
   "expo": {
     "name": "Coppel PTL",
     "slug": "coppel-ptl",
+    "owner": "coppelptl",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/Logo_apk.png",
