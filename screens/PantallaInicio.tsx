@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { ScrollView, View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 
 const PantallaInicio = ({ navigation }: any) => {
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.titulo}>Inicio</Text>
 
       <View style={styles.botonesContainer}>
@@ -42,8 +42,10 @@ const PantallaInicio = ({ navigation }: any) => {
           />
           <Text style={styles.texto}>Historial</Text>
         </TouchableOpacity>
+
+        {/* Puedes seguir agregando más botones aquí */}
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -51,8 +53,6 @@ export default PantallaInicio;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#fff',
     paddingTop: 60,
     paddingHorizontal: 20,
     alignItems: 'center',
@@ -66,16 +66,15 @@ const styles = StyleSheet.create({
   botonesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 20,
+    justifyContent: 'space-between',
   },
   boton: {
     backgroundColor: '#f5f5f5',
     borderRadius: 20,
     padding: 20,
     alignItems: 'center',
-    width: 140,
-    margin: 10,
+    width: '45%',
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },

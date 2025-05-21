@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { limpiarColorAsignado } from '../utils/colores'; // importamos función para liberar color
+import { limpiarColorAsignado } from '../utils/colores';
 
 const PantallaPerfil = () => {
   const navigation = useNavigation<any>();
@@ -25,7 +25,7 @@ const PantallaPerfil = () => {
 
   const cerrarSesion = async () => {
     await AsyncStorage.removeItem('usuarioLogueado');
-    limpiarColorAsignado(); // Liberar el color cuando cierra sesión
+    limpiarColorAsignado();
     Alert.alert('Sesión cerrada', 'Tu color ha sido liberado.');
     navigation.reset({
       index: 0,
@@ -38,18 +38,27 @@ const PantallaPerfil = () => {
       <Text style={styles.titulo}>Perfil</Text>
 
       {usuario ? (
-        <>
-          <Text style={styles.info}>👤 Nombre: <Text style={styles.valor}>{usuario.nombre}</Text></Text>
-          <Text style={styles.info}>🆔 Usuario: <Text style={styles.valor}>{usuario.username}</Text></Text>
-          <Text style={styles.info}>📧 Correo: <Text style={styles.valor}>{usuario.correo}</Text></Text>
-
-          <TouchableOpacity style={styles.botonCerrar} onPress={cerrarSesion}>
-            <Text style={styles.botonTexto}>Cerrar sesión</Text>
-          </TouchableOpacity>
-        </>
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <Text style={styles.label}>Nombre:</Text>
+            <Text style={styles.valor}>{usuario.nombre}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Usuario:</Text>
+            <Text style={styles.valor}>{usuario.username}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Correo:</Text>
+            <Text style={styles.valor}>{usuario.correo}</Text>
+          </View>
+        </View>
       ) : (
         <Text style={styles.cargando}>Cargando perfil...</Text>
       )}
+
+      <TouchableOpacity style={styles.botonCerrar} onPress={cerrarSesion}>
+        <Text style={styles.botonTexto}>Cerrar sesión</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -68,14 +77,32 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 30,
     textAlign: 'center',
+    color: '#0071ce',
   },
-  info: {
-    fontSize: 18,
-    marginBottom: 10,
+  card: {
+    backgroundColor: '#f8f9fa',
+    padding: 20,
+    borderRadius: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15,
+  },
+  label: {
+    fontSize: 16,
+    color: '#555',
+    fontWeight: '600',
   },
   valor: {
-    fontWeight: 'bold',
+    fontSize: 16,
     color: '#0071ce',
+    fontWeight: 'bold',
   },
   botonCerrar: {
     backgroundColor: '#e74c3c',

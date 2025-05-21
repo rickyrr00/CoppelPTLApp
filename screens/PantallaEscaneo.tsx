@@ -12,6 +12,8 @@ import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNetInfo } from '../hooks/useNetInfo';
 import { escanearSKU } from '../services/api';
+import { Ionicons } from '@expo/vector-icons';
+
 
 const PantallaEscaneo = ({ navigation }: any) => {
   const [producto, setProducto] = useState<any>(null);
@@ -97,7 +99,8 @@ const PantallaEscaneo = ({ navigation }: any) => {
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.botonRegresar} onPress={() => navigation.goBack()}>
-        <Text style={styles.textoRegresar}>← Regresar</Text>
+      <Ionicons name="arrow-back" size={20} color="#0071ce" />
+      <Text style={styles.textoRegresar}>Regresar</Text>
       </TouchableOpacity>
 
       <Text style={styles.titulo}>Escaneo de producto</Text>
@@ -134,7 +137,7 @@ const PantallaEscaneo = ({ navigation }: any) => {
           keyboardType="numeric"
         />
         <TouchableOpacity style={styles.botonClearInput} onPress={limpiar}>
-          <Text style={styles.textoClearInput}>❌</Text>
+          <Text style={styles.textoClearInput}>Borrar</Text>
         </TouchableOpacity>
       </View>
 
@@ -171,14 +174,15 @@ const styles = StyleSheet.create({
     paddingTop: 60,
   },
   botonRegresar: {
-    position: 'absolute',
-    top: 30,
-    left: 20,
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 6,
+  marginBottom: 20,
   },
   textoRegresar: {
-    fontSize: 18,
-    color: '#0071ce',
-    fontWeight: 'bold',
+  fontSize: 16,
+  color: '#0071ce',
+  fontWeight: '600',
   },
   titulo: {
     fontSize: 20,
@@ -230,16 +234,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   botonClearInput: {
-    marginLeft: 10,
-    backgroundColor: '#e0e0e0',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
+  marginLeft: 10,
+  backgroundColor: '#0071ce',
+  paddingHorizontal: 14,
+  paddingVertical: 8,
+  borderRadius: 8,
   },
   textoClearInput: {
-    fontSize: 18,
-    color: '#333',
-    fontWeight: 'bold',
+  fontSize: 16,
+  color: '#fff',
+  fontWeight: 'bold',
   },
   resultadoContainer: {
     borderWidth: 2,
