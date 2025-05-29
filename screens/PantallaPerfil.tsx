@@ -1,32 +1,62 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import { limpiarColorAsignado } from '../utils/colores';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 const PantallaPerfil = () => {
   const navigation = useNavigation<any>();
-  const [usuario, setUsuario] = useState<{ nombre: string; username: string; correo: string } | null>(null);
+  const [usuario, setUsuario] = useState<{
+    name: string;
+    username: string;
+    email: string;
+    color_hex: string | null;
+  } | null>(null);
 
   useEffect(() => {
-    const obtenerUsuario = async () => {
-      const usuarioLogueado = await AsyncStorage.getItem('usuarioLogueado');
-      if (usuarioLogueado) {
-        const datos = JSON.parse(usuarioLogueado);
+    const cargarUsuario = async () => {
+      try {
+        const datosGuardados = await AsyncStorage.getItem('usuarioLogueado');
+        if (!datosGuardados) throw new Error('No se encontró sesión activa');
+
+        const datos = JSON.parse(datosGuardados);
+        const user = datos?.data?.user || datos.user;
+
+        if (!user) throw new Error('No se pudo acceder a los datos del usuario');
+
         setUsuario({
-          nombre: datos.nombre,
-          username: datos.username,
-          correo: datos.correo,
+          name: user.name || '',
+          username: user.username || '',
+          email: user.email || '',
+          color_hex: user.color_hex || null,
         });
+      } catch (error: any) {
+        Alert.alert('Error', error.message || 'Error al cargar el perfil');
       }
     };
-    obtenerUsuario();
+
+    cargarUsuario();
   }, []);
 
+  const limpiarColor = async (username: string) => {
+    try {
+      await axios.patch('https://server-zzcb.onrender.com/update-color', {
+        username,
+        color_hex: '',
+        color_index: -1,
+      });
+    } catch (error: any) {
+      console.error('❌ Error limpiando color:', error.response?.data || error.message);
+    }
+  };
+
   const cerrarSesion = async () => {
+    if (usuario?.username) {
+      await limpiarColor(usuario.username);
+    }
+
     await AsyncStorage.removeItem('usuarioLogueado');
-    limpiarColorAsignado();
-    Alert.alert('Sesión cerrada', 'Tu color ha sido liberado.');
+    Alert.alert('Sesión cerrada');
     navigation.reset({
       index: 0,
       routes: [{ name: 'Login' }],
@@ -41,7 +71,7 @@ const PantallaPerfil = () => {
         <View style={styles.card}>
           <View style={styles.row}>
             <Text style={styles.label}>Nombre:</Text>
-            <Text style={styles.valor}>{usuario.nombre}</Text>
+            <Text style={styles.valor}>{usuario.name}</Text>
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Usuario:</Text>
@@ -49,7 +79,15 @@ const PantallaPerfil = () => {
           </View>
           <View style={styles.row}>
             <Text style={styles.label}>Correo:</Text>
-            <Text style={styles.valor}>{usuario.correo}</Text>
+            <Text style={styles.valor}>{usuario.email}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Color asignado:</Text>
+            {usuario.color_hex ? (
+              <View style={[styles.cuadroColor, { backgroundColor: usuario.color_hex }]} />
+            ) : (
+              <Text style={styles.valor}>Sin color asignado</Text>
+            )}
           </View>
         </View>
       ) : (
@@ -84,14 +122,11 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 15,
   },
   label: {
@@ -103,6 +138,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#0071ce',
     fontWeight: 'bold',
+  },
+  cuadroColor: {
+    width: 30,
+    height: 30,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#ccc',
   },
   botonCerrar: {
     backgroundColor: '#e74c3c',

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { coloresDisponibles, mapaColores } from '../utils/colores';
+import { actualizarColor } from '../services/usuarios';
+import axios from 'axios';
 
 const PantallaAsignarColor = ({ navigation }: any) => {
   const [colorSeleccionado, setColorSeleccionado] = useState<string | null>(null);
@@ -9,9 +11,15 @@ const PantallaAsignarColor = ({ navigation }: any) => {
 
   useEffect(() => {
     const cargarColoresOcupados = async () => {
-      const ocupados = await AsyncStorage.getItem('coloresOcupados');
-      if (ocupados) {
-        setColoresOcupados(JSON.parse(ocupados));
+      try {
+        const response = await axios.get('https://server-zzcb.onrender.com/get-used-colors');
+        console.log('Colores ocupados:', response.data);
+        const data = response.data;
+        const usados = data.map((u: any) => u.color_hex).filter(Boolean);
+        setColoresOcupados(usados);
+        console.log('Colores seleccionado:', colorSeleccionado);
+      } catch (error) {
+        Alert.alert('Error al cargar colores ocupados');
       }
     };
     cargarColoresOcupados();
@@ -22,29 +30,42 @@ const PantallaAsignarColor = ({ navigation }: any) => {
   };
 
   const confirmarColor = async () => {
-  if (!colorSeleccionado) {
-    Alert.alert('Selecciona un color primero');
-    return;
-  }
+    if (colorSeleccionado) {
+      Alert.alert('No puedes cambiar el color');
+      navigation.goBack();
+      return;
+    }
+    if (!colorSeleccionado) {
+      Alert.alert('Selecciona un color primero');
+      return;
+    }
 
-  if (coloresOcupados.includes(colorSeleccionado)) {
-    Alert.alert('Color ocupado', 'Elige otro color que esté disponible');
-    return;
-  }
+    if (coloresOcupados.includes(colorSeleccionado)) {
+      Alert.alert('Color ocupado', 'Elige otro color que esté disponible');
+      return;
+    }
 
-  const colorIndex = mapaColores[colorSeleccionado];
-  await AsyncStorage.setItem('colorAsignado', colorSeleccionado);
-  await AsyncStorage.setItem('colorIndex', String(colorIndex));
+    try {
+      const usuarioJSON = await AsyncStorage.getItem('usuarioLogueado');
+      if (!usuarioJSON) throw new Error('No hay usuario logueado');
 
-  // Asegurar que no haya duplicados en coloresOcupados
-  const nuevosOcupados = Array.from(new Set([...coloresOcupados, colorSeleccionado]));
-  await AsyncStorage.setItem('coloresOcupados', JSON.stringify(nuevosOcupados));
+      const usuario = JSON.parse(usuarioJSON);
+      const userId = usuario.data.user.username;
+      if (!userId) throw new Error('Falta el ID del usuario');
 
-  Alert.alert('Color asignado', `Tu color ahora es: ${colorSeleccionado}`, [
-    { text: 'OK', onPress: () => navigation.goBack() },
-  ]);
-};
+      const colorIndex = mapaColores[colorSeleccionado];
 
+      
+      await actualizarColor(userId, colorSeleccionado, colorIndex);
+      navigation.goBack();
+
+      Alert.alert('Color asignado', `Tu color ahora es: ${colorSeleccionado}`, [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'No se pudo actualizar el color');
+    }
+  };
 
   const renderItem = ({ item }: { item: string }) => {
     const ocupado = coloresOcupados.includes(item);

@@ -13,36 +13,41 @@ import PantallaInicio from './screens/PantallaInicio';
 import PantallaPerfil from './screens/PantallaPerfil';
 import PantallaAsignarColor from './screens/PantallaAsignarColor';
 
+import { AuthProvider } from './context/AuthContext';
+import Protegido from './components/Protegido';
+
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const Tabs = () => {
   return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap = 'home-outline';
-          if (route.name === 'Inicio') iconName = 'home-outline';
-          else if (route.name === 'Escaneo') iconName = 'scan-outline';
-          else if (route.name === 'Perfil') iconName = 'person-outline';
+    <Protegido>
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({ color, size }) => {
+            let iconName: keyof typeof Ionicons.glyphMap = 'home-outline';
+            if (route.name === 'Inicio') iconName = 'home-outline';
+            else if (route.name === 'Escaneo') iconName = 'scan-outline';
+            else if (route.name === 'Perfil') iconName = 'person-outline';
 
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        headerShown: false,
-        tabBarActiveTintColor: '#0071ce',
-        tabBarInactiveTintColor: 'gray',
-      })}
-    >
-      <Tab.Screen name="Inicio" component={PantallaInicio} />
-      <Tab.Screen name="Escaneo" component={PantallaEscaneo} />
-      <Tab.Screen name="Perfil" component={PantallaPerfil} />
-    </Tab.Navigator>
+            return <Ionicons name={iconName} size={size} color={color} />;
+          },
+          headerShown: false,
+          tabBarActiveTintColor: '#0071ce',
+          tabBarInactiveTintColor: 'gray',
+        })}
+      >
+        <Tab.Screen name="Inicio" component={PantallaInicio} />
+        <Tab.Screen name="Escaneo" component={PantallaEscaneo} />
+        <Tab.Screen name="Perfil" component={PantallaPerfil} />
+      </Tab.Navigator>
+    </Protegido>
   );
 };
 
 export default function App() {
   return (
-    <>
+    <AuthProvider>
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Login" component={PantallaLogin} />
@@ -53,6 +58,6 @@ export default function App() {
         </Stack.Navigator>
       </NavigationContainer>
       <Toast />
-    </>
+    </AuthProvider>
   );
 }

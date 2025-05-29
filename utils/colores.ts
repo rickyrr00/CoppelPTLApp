@@ -1,4 +1,4 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '../lib/supabase';
 
 export const coloresDisponibles: string[] = [
   '#FF3B30', // red
@@ -20,18 +20,26 @@ export const mapaColores: { [key: string]: number } = {
 
 export const limpiarColorAsignado = async () => {
   try {
-    const color = await AsyncStorage.getItem('colorAsignado');
-    if (!color) return;
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    const userId = authData?.user?.id;
 
-    await AsyncStorage.multiRemove(['colorAsignado', 'colorIndex']);
+    if (!userId || authError) {
+      console.error('❌ No se pudo obtener el usuario para limpiar color');
+      return;
+    }
 
-    const ocupados = await AsyncStorage.getItem('coloresOcupados');
-    if (ocupados) {
-      const lista: string[] = JSON.parse(ocupados);
-      const nuevaLista = lista.filter((c) => c !== color);
-      await AsyncStorage.setItem('coloresOcupados', JSON.stringify(nuevaLista));
+    const { error } = await supabase
+      .from('usuarios')
+      .update({
+        color_hex: null,
+        color_index: null,
+      })
+      .eq('id', userId);
+
+    if (error) {
+      console.error('❌ Error al limpiar color en Supabase:', error.message);
     }
   } catch (error) {
-    console.error('❌ Error al liberar color asignado:', error);
+    console.error('❌ Error inesperado al liberar color asignado:', error);
   }
 };

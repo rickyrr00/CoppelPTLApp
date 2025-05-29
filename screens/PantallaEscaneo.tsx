@@ -14,7 +14,6 @@ import { useNetInfo } from '../hooks/useNetInfo';
 import { escanearSKU } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 
-
 const PantallaEscaneo = ({ navigation }: any) => {
   const [producto, setProducto] = useState<any>(null);
   const [cargando, setCargando] = useState(false);
@@ -24,23 +23,30 @@ const PantallaEscaneo = ({ navigation }: any) => {
   const isConnected = useNetInfo();
 
   useEffect(() => {
-    const verificarColor = async () => {
-      const color = await AsyncStorage.getItem('colorAsignado');
-      const index = await AsyncStorage.getItem('colorIndex');
-      if (color && index !== null && !isNaN(Number(index))) {
-        setColorAsignado(color);
-        setColorIndex(Number(index));
-      } else {
+    const cargarColorDesdeUsuario = async () => {
+      try {
+        const usuarioJSON = await AsyncStorage.getItem('usuarioLogueado');
+        if (!usuarioJSON) throw new Error('No hay sesión activa');
+
+        const usuario = JSON.parse(usuarioJSON);
+        if (!usuario.data.user.color_hex || usuario.data.user.color_index === undefined) {
+          throw new Error('Color no asignado aún');
+        }
+
+        setColorAsignado(usuario.data.user.color_hex);
+        setColorIndex(usuario.data.user.color_index);
+      } catch (error: any) {
         Toast.show({
           type: 'error',
-          text1: 'No tienes color asignado',
-          text2: 'Primero debes asignar un color',
+          text1: 'Error',
+          text2: error.message || 'Primero debes asignar un color',
           position: 'bottom',
         });
         navigation.navigate('Inicio');
       }
     };
-    verificarColor();
+
+    cargarColorDesdeUsuario();
   }, []);
 
   useEffect(() => {
@@ -99,8 +105,8 @@ const PantallaEscaneo = ({ navigation }: any) => {
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.botonRegresar} onPress={() => navigation.goBack()}>
-      <Ionicons name="arrow-back" size={20} color="#0071ce" />
-      <Text style={styles.textoRegresar}>Regresar</Text>
+        <Ionicons name="arrow-back" size={20} color="#0071ce" />
+        <Text style={styles.textoRegresar}>Regresar</Text>
       </TouchableOpacity>
 
       <Text style={styles.titulo}>Escaneo de producto</Text>
@@ -119,7 +125,6 @@ const PantallaEscaneo = ({ navigation }: any) => {
 
       <Text style={styles.textoGuia}>Escanea un producto con el lector físico</Text>
 
-      {/* Input visible con botón de limpiar */}
       <View style={styles.inputRow}>
         <TextInput
           ref={inputRef}
@@ -174,15 +179,15 @@ const styles = StyleSheet.create({
     paddingTop: 60,
   },
   botonRegresar: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  gap: 6,
-  marginBottom: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 20,
   },
   textoRegresar: {
-  fontSize: 16,
-  color: '#0071ce',
-  fontWeight: '600',
+    fontSize: 16,
+    color: '#0071ce',
+    fontWeight: '600',
   },
   titulo: {
     fontSize: 20,
@@ -234,16 +239,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   botonClearInput: {
-  marginLeft: 10,
-  backgroundColor: '#0071ce',
-  paddingHorizontal: 14,
-  paddingVertical: 8,
-  borderRadius: 8,
+    marginLeft: 10,
+    backgroundColor: '#0071ce',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
   textoClearInput: {
-  fontSize: 16,
-  color: '#fff',
-  fontWeight: 'bold',
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: 'bold',
   },
   resultadoContainer: {
     borderWidth: 2,

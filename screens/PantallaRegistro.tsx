@@ -10,9 +10,13 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import Ionicons from '@expo/vector-icons/Ionicons';
+
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { registrarUsuario } from '../services/usuarios';
+
 
 const PantallaRegistro = () => {
   const navigation = useNavigation<any>();
@@ -56,17 +60,22 @@ const PantallaRegistro = () => {
     if (hayErrores) return;
 
     const nuevoUsuario = {
-      nombre,
+      id: uuidv4(),
+      name: nombre,
       username,
-      correo,
-      contrasena,
+      email: correo,
+      password: contrasena,
+      color_hex: '',
+      color_index: -1,
     };
 
-    await AsyncStorage.setItem(`usuario_${correo.toLowerCase()}`, JSON.stringify(nuevoUsuario));
-    await AsyncStorage.setItem(`usuario_${username.toLowerCase()}`, JSON.stringify(nuevoUsuario));
-
-    Alert.alert('¡Registro exitoso!', 'Ahora puedes iniciar sesión.');
-    navigation.navigate('Login');
+    try {
+      await registrarUsuario(nuevoUsuario);
+      Alert.alert('Registro exitoso', 'Tu cuenta ha sido creada. Inicia sesión.');
+      navigation.navigate('Login');
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'No se pudo registrar el usuario.');
+    }
   };
 
   return (
@@ -75,15 +84,15 @@ const PantallaRegistro = () => {
         <TouchableOpacity style={styles.botonRegresar} onPress={() => navigation.goBack()}>
           <Text style={styles.textoRegresar}>←</Text>
         </TouchableOpacity>
-  
+
         <Text style={styles.titulo}>Crear cuenta</Text>
-  
+
         <TextInput style={styles.input} placeholder="Nombre completo" value={nombre} onChangeText={setNombre} />
         {errores.nombre ? <Text style={styles.error}>{errores.nombre}</Text> : null}
-  
+
         <TextInput style={styles.input} placeholder="Nombre de usuario" value={username} onChangeText={setUsername} />
         {errores.username ? <Text style={styles.error}>{errores.username}</Text> : null}
-  
+
         <TextInput
           style={styles.input}
           placeholder="Correo electrónico"
@@ -93,7 +102,7 @@ const PantallaRegistro = () => {
           onChangeText={setCorreo}
         />
         {errores.correo ? <Text style={styles.error}>{errores.correo}</Text> : null}
-  
+
         <TextInput
           style={styles.input}
           placeholder="Contraseña"
@@ -102,7 +111,7 @@ const PantallaRegistro = () => {
           onChangeText={setContrasena}
         />
         {errores.contrasena ? <Text style={styles.error}>{errores.contrasena}</Text> : null}
-  
+
         <TextInput
           style={styles.input}
           placeholder="Confirmar contraseña"
@@ -111,7 +120,7 @@ const PantallaRegistro = () => {
           onChangeText={setConfirmarContrasena}
         />
         {errores.confirmar ? <Text style={styles.error}>{errores.confirmar}</Text> : null}
-  
+
         <TouchableOpacity style={styles.terminosContainer} onPress={() => setAceptaTerminos(!aceptaTerminos)}>
           <Ionicons
             name={aceptaTerminos ? 'checkbox-outline' : 'square-outline'}
@@ -126,13 +135,13 @@ const PantallaRegistro = () => {
           </Text>
         </TouchableOpacity>
         {errores.terminos ? <Text style={styles.error}>{errores.terminos}</Text> : null}
-  
+
         <TouchableOpacity style={styles.boton} onPress={handleRegistro}>
           <Text style={styles.botonTexto}>Registrarme</Text>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
-  );  
+  );
 };
 
 export default PantallaRegistro;
@@ -205,4 +214,3 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
-

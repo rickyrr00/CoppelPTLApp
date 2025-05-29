@@ -11,80 +11,79 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
+
+const API_URL = 'https://server-zzcb.onrender.com';
 
 const PantallaLogin = () => {
   const navigation = useNavigation<any>();
-  const [identificador, setIdentificador] = useState('');
-  const [contrasena, setContrasena] = useState('');
-  const [errores, setErrores] = useState({ identificador: '', contrasena: '' });
-
-  const validarCorreo = (correo: string) => /\S+@\S+\.\S+/.test(correo);
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [errores, setErrores] = useState({ identifier: '', password: '' });
 
   const handleLogin = async () => {
-    let erroresTemp = { identificador: '', contrasena: '' };
+    setErrores({ identifier: '', password: '' });
 
-    if (!identificador.trim()) erroresTemp.identificador = 'Ingresa tu correo o usuario';
-    if (!contrasena.trim()) erroresTemp.contrasena = 'Ingresa tu contraseña';
-
-    setErrores(erroresTemp);
-    if (erroresTemp.identificador || erroresTemp.contrasena) return;
-
-    // Intenta buscar por correo o por username
-    const id = identificador.toLowerCase();
-    const usuarioJSON = await AsyncStorage.getItem(`usuario_${id}`);
-
-    if (!usuarioJSON) {
-      Alert.alert('Usuario no encontrado');
+    if (!identifier.trim()) {
+      setErrores((prev) => ({ ...prev, identifier: 'Ingresa tu correo o usuario' }));
+      return;
+    }
+    if (!password.trim()) {
+      setErrores((prev) => ({ ...prev, password: 'Ingresa tu contraseña' }));
       return;
     }
 
-    const usuario = JSON.parse(usuarioJSON);
+    try {
+      const response = await axios.post("https://server-zzcb.onrender.com/login", { identifier,  password });
 
-    if (usuario.contrasena !== contrasena) {
-      Alert.alert('Contraseña incorrecta');
-      return;
+      console.log (response)
+      // Guardar sesión local
+      await AsyncStorage.setItem('usuarioLogueado', JSON.stringify(response));
+
+      // Navegar a la app
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Tabs' }],
+      });
+    } catch (error) {
+      console.error('Login error:', error);
+      Alert.alert('Error', 'Ocurrió un error al iniciar sesión');
     }
-
-    await AsyncStorage.setItem('usuarioLogueado', JSON.stringify(usuario));
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Tabs' }],
-    });
   };
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.container}>
         <Text style={styles.titulo}>Iniciar sesión</Text>
-  
+
         <TextInput
           style={styles.input}
           placeholder="Correo o nombre de usuario"
           autoCapitalize="none"
-          value={identificador}
-          onChangeText={setIdentificador}
+          value={identifier}
+          onChangeText={setIdentifier}
         />
-        {errores.identificador ? <Text style={styles.error}>{errores.identificador}</Text> : null}
-  
+        {errores.identifier ? <Text style={styles.error}>{errores.identifier}</Text> : null}
+
         <TextInput
           style={styles.input}
           placeholder="Contraseña"
           secureTextEntry
-          value={contrasena}
-          onChangeText={setContrasena}
+          value={password}
+          onChangeText={setPassword}
         />
-        {errores.contrasena ? <Text style={styles.error}>{errores.contrasena}</Text> : null}
-  
+        {errores.password ? <Text style={styles.error}>{errores.password}</Text> : null}
+
         <TouchableOpacity style={styles.boton} onPress={handleLogin}>
           <Text style={styles.botonTexto}>Ingresar</Text>
         </TouchableOpacity>
-  
+
         <TouchableOpacity onPress={() => navigation.navigate('Registro')}>
           <Text style={styles.link}>¿No tienes cuenta? Regístrate</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
-  );  
+  );
 };
 
 export default PantallaLogin;
@@ -92,8 +91,8 @@ export default PantallaLogin;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center', // centrado vertical
-    alignItems: 'center',     // centrado horizontal
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
     backgroundColor: '#fff',
   },
@@ -131,6 +130,7 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 13,
     marginBottom: 5,
+    alignSelf: 'flex-start',
   },
   link: {
     color: '#0071ce',
