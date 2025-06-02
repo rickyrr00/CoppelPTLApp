@@ -1,42 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { useUsuarioActivo } from '../hooks/useUsuarioActivo';
 
 const PantallaPerfil = () => {
   const navigation = useNavigation<any>();
-  const [usuario, setUsuario] = useState<{
-    name: string;
-    username: string;
-    email: string;
-    color_hex: string | null;
-  } | null>(null);
-
-  useEffect(() => {
-    const cargarUsuario = async () => {
-      try {
-        const datosGuardados = await AsyncStorage.getItem('usuarioLogueado');
-        if (!datosGuardados) throw new Error('No se encontró sesión activa');
-
-        const datos = JSON.parse(datosGuardados);
-        const user = datos?.data?.user || datos.user;
-
-        if (!user) throw new Error('No se pudo acceder a los datos del usuario');
-
-        setUsuario({
-          name: user.name || '',
-          username: user.username || '',
-          email: user.email || '',
-          color_hex: user.color_hex || null,
-        });
-      } catch (error: any) {
-        Alert.alert('Error', error.message || 'Error al cargar el perfil');
-      }
-    };
-
-    cargarUsuario();
-  }, []);
+  const usuario = useUsuarioActivo();
 
   const limpiarColor = async (username: string) => {
     try {

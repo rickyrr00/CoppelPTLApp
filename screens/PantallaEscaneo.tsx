@@ -9,45 +9,32 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Toast from 'react-native-toast-message';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNetInfo } from '../hooks/useNetInfo';
+import { useUsuarioActivo } from '../hooks/useUsuarioActivo';
 import { escanearSKU } from '../services/api';
 import { Ionicons } from '@expo/vector-icons';
 
 const PantallaEscaneo = ({ navigation }: any) => {
   const [producto, setProducto] = useState<any>(null);
   const [cargando, setCargando] = useState(false);
-  const [colorAsignado, setColorAsignado] = useState<string | null>(null);
-  const [colorIndex, setColorIndex] = useState<number | null>(null);
   const inputRef = useRef<TextInput>(null);
   const isConnected = useNetInfo();
+  const usuario = useUsuarioActivo();
+
+  const colorAsignado = usuario?.color_hex || null;
+  const colorIndex = usuario?.color_index ?? null;
 
   useEffect(() => {
-    const cargarColorDesdeUsuario = async () => {
-      try {
-        const usuarioJSON = await AsyncStorage.getItem('usuarioLogueado');
-        if (!usuarioJSON) throw new Error('No hay sesión activa');
-
-        const usuario = JSON.parse(usuarioJSON);
-        if (!usuario.data.user.color_hex || usuario.data.user.color_index === undefined) {
-          throw new Error('Color no asignado aún');
-        }
-
-        setColorAsignado(usuario.data.user.color_hex);
-        setColorIndex(usuario.data.user.color_index);
-      } catch (error: any) {
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: error.message || 'Primero debes asignar un color',
-          position: 'bottom',
-        });
-        navigation.navigate('Inicio');
-      }
-    };
-
-    cargarColorDesdeUsuario();
-  }, []);
+    if (!colorAsignado || colorIndex === null) {
+      Toast.show({
+        type: 'error',
+        text1: 'Color no asignado',
+        text2: 'Debes asignar un color antes de escanear',
+        position: 'bottom',
+      });
+      navigation.navigate('Inicio');
+    }
+  }, [colorAsignado, colorIndex]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -57,8 +44,7 @@ const PantallaEscaneo = ({ navigation }: any) => {
   }, []);
 
   const buscarProductoAuto = async (sku: string) => {
-    if (!sku.trim()) return;
-    if (colorIndex === null) return;
+    if (!sku.trim() || colorIndex === null) return;
 
     setCargando(true);
     setProducto(null);

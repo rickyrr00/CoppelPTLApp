@@ -1,25 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { coloresDisponibles, mapaColores } from '../utils/colores';
 import { actualizarColor } from '../services/usuarios';
+import { useUsuarioActivo } from '../hooks/useUsuarioActivo';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
 const PantallaAsignarColor = ({ navigation }: any) => {
+  const usuario = useUsuarioActivo();
   const [colorSeleccionado, setColorSeleccionado] = useState<string | null>(null);
   const [coloresOcupados, setColoresOcupados] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (usuario?.color_hex) {
+      Alert.alert(
+        'Color ya asignado',
+        'Ya tienes un color asignado. No puedes cambiarlo hasta cerrar sesión.',
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
+      );
+    }
+  }, [usuario]);
 
   useEffect(() => {
     const cargarColoresOcupados = async () => {
       try {
         const response = await axios.get('https://server-zzcb.onrender.com/get-used-colors');
-        console.log('Colores ocupados:', response.data);
-        const data = response.data;
-        const usados = data.map((u: any) => u.color_hex).filter(Boolean);
+        const usados = response.data.map((u: any) => u.color_hex).filter(Boolean);
         setColoresOcupados(usados);
-        console.log('Colores seleccionado:', colorSeleccionado);
       } catch (error) {
-        Alert.alert('Error al cargar colores ocupados');
+        Alert.alert('Error', 'Error al cargar colores ocupados');
       }
     };
     cargarColoresOcupados();
@@ -30,11 +39,6 @@ const PantallaAsignarColor = ({ navigation }: any) => {
   };
 
   const confirmarColor = async () => {
-    if (colorSeleccionado) {
-      Alert.alert('No puedes cambiar el color');
-      navigation.goBack();
-      return;
-    }
     if (!colorSeleccionado) {
       Alert.alert('Selecciona un color primero');
       return;
@@ -46,22 +50,30 @@ const PantallaAsignarColor = ({ navigation }: any) => {
     }
 
     try {
-      const usuarioJSON = await AsyncStorage.getItem('usuarioLogueado');
-      if (!usuarioJSON) throw new Error('No hay usuario logueado');
-
-      const usuario = JSON.parse(usuarioJSON);
-      const userId = usuario.data.user.username;
+      const userId = usuario?.username;
       if (!userId) throw new Error('Falta el ID del usuario');
 
       const colorIndex = mapaColores[colorSeleccionado];
 
-      
       await actualizarColor(userId, colorSeleccionado, colorIndex);
-      navigation.goBack();
 
-      Alert.alert('Color asignado', `Tu color ahora es: ${colorSeleccionado}`, [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
+      const usuarioActualizado = {
+        ...usuario,
+        color_hex: colorSeleccionado,
+        color_index: colorIndex,
+      };
+
+      await AsyncStorage.setItem(
+        'usuarioLogueado',
+        JSON.stringify({
+          data: {
+            user: usuarioActualizado,
+          },
+        })
+      );
+
+      Alert.alert('Color asignado', `Tu color ahora es: ${colorSeleccionado}`);
+      navigation.goBack();
     } catch (error: any) {
       Alert.alert('Error', error.message || 'No se pudo actualizar el color');
     }
