@@ -141,8 +141,6 @@ const PantallaEscaneo = ({ navigation }: any) => {
             <Text style={styles.linea}>SKU: {producto.sku}</Text>
             <Text style={styles.linea}>Coordenada: {producto.coordenada}</Text>
             <Text style={styles.linea}>Artículo: {producto.articulo}</Text>
-            <Text style={styles.linea}># Orden: {producto.orden}</Text>
-            <Text style={styles.linea}>Detalle: {producto.detalle}</Text>
             <TouchableOpacity style={styles.botonClear} onPress={limpiar}>
               <Text style={styles.textoClear}>Borrar</Text>
             </TouchableOpacity>
